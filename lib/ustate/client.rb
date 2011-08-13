@@ -18,7 +18,7 @@ class UState::Client
   def <<(state_opts)
     # Create state
     state = UState::State.new(state_opts)
-    state.time ||= Time.now.iso8601
+    state.time ||= Time.now.utc.to_i
     state.host ||= Socket.gethostname
 
     message = UState::Message.new :state => state

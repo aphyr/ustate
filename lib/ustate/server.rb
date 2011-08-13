@@ -26,7 +26,10 @@ module UState
     end
 
     def start
-      @backends.all? do |b|
+      @index.start
+     
+      # Right now b.start blocks... should look into EM 
+      @backends.map do |b|
         b.start
       end
     end
@@ -39,12 +42,16 @@ module UState
           stop!
         end
       end
+
+      @index.stop
     end
 
     def stop!
       @backends.map do |b|
         b.stop!
       end
+
+      @index.stop!
     end
 
     def setup_signals
