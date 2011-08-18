@@ -7,4 +7,12 @@ class UState::State
   optional :host, :string, 4
   optional :description, :string, 5
   optional :metric_f, :float, 15
+
+  def metric
+    @metric || metric_f
+  end
+
+  def metric=(m)
+    @metric = m
+  end
 end
