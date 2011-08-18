@@ -1,5 +1,7 @@
 class UState::Client
-  class InvalidResponse < RuntimeError; end
+  class Error < RuntimeError; end
+  class InvalidResponse < Error; end
+  class ServerError < Error; end
   
   require 'thread'
   require 'time'
@@ -15,28 +17,19 @@ class UState::Client
     @locket = Mutex.new
   end
 
+  # Send a state
   def <<(state_opts)
     # Create state
     state = UState::State.new(state_opts)
     state.time ||= Time.now.utc.to_i
     state.host ||= Socket.gethostname
 
-    message = UState::Message.new :state => state
+    message = UState::Message.new :states => [state]
 
     # Transmit
     with_connection do |s|
       s << message.encode_with_length
       read_message s
-    end
-  end
-
-  # Read a message from a stream
-  def read_message(s)
-    if buffer = s.read(4) and buffer.size == 4
-      length = buffer.unpack('N').first
-      UState::Message.decode s.read(length)
-    else
-      raise InvalidResponse, "unexpected EOF"
     end
   end
 
@@ -54,6 +47,39 @@ class UState::Client
     not @socket.closed?
   end
 
+  # Ask for states
+  def query(string = nil)
+    message = UState::Message.new query: UState::Query.new(string: string)
+    with_connection do |s|
+      s << message.encode_with_length
+      read_message s
+    end
+  end
+
+  # Read a message from a stream
+  def read_message(s)
+    if buffer = s.read(4) and buffer.size == 4
+      length = buffer.unpack('N').first
+      begin
+        str = s.read length
+        message = UState::Message.decode str
+      rescue => e
+        puts "Message was #{str.inspect}"
+        raise
+      end
+      
+      unless message.ok
+        puts "Failed"
+        raise ServerError, message.error
+      end
+      
+      message
+    else
+      raise InvalidResponse, "unexpected EOF"
+    end
+  end
+
+  # Yields a connection in the block.
   def with_connection
     tries = 0
     begin

@@ -3,5 +3,6 @@ module UState
 
   require 'beefcake'
   require 'ustate/state'
+  require 'ustate/query'
   require 'ustate/message'
 end

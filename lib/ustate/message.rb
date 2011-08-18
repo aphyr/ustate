@@ -4,8 +4,9 @@ module UState
     
     optional :ok, :bool, 2
     optional :error, :string, 3
-    optional :state, State, 4
-    
+    repeated :states, State, 4
+    optional :query, Query, 5
+
     def encode_with_length
       buffer = ''
       encoded = encode buffer

@@ -1,0 +1,116 @@
+module UState
+  grammar QueryString
+    # (state =~ "foo" or state == "bar") and service == "foo"
+    # Binding order proceeds from loosest to tightest.
+    
+    rule or
+      first:and rest:(space 'or' space and)* {
+        def sql
+          rest.elements.map { |x| x.and }.
+            inject(first.sql) do |a, sub|
+              a | sub.sql
+            end
+        end
+      }
+    end
+
+    rule and
+      first:primary rest:(space 'and' space primary)* {
+        def sql
+          rest.elements.map { |x| x.primary }.
+            inject(first.sql) do |a, sub|
+              a & sub.sql
+            end
+        end
+      }
+    end
+
+    rule primary
+      '(' space? x:or space? ')' {
+        def sql
+          x.sql
+        end
+      }
+      / 
+      predicate
+    end 
+
+    rule predicate
+      equals / not_equals / approximately
+    end
+
+    rule approximately
+      field space? '=~' space? string {
+        def sql
+          Sequel::SQL::StringExpression.like field.sql, string.sql
+        end
+      }
+    end   
+
+    rule not_equals
+      field space? '!=' space? value {
+        def sql
+          Sequel::SQL::BooleanExpression.from_value_pairs({field.sql => value.sql}, :AND, true)
+        end
+      }
+    end
+ 
+    rule equals
+      field space? ('=' / '==') space? value {
+        def sql
+          Sequel::SQL::BooleanExpression.from_value_pairs field.sql => value.sql
+        end
+      }
+    end
+
+    rule value
+      double_quoted_string / float / integer
+    end
+
+    rule integer
+      '-'? [0-9]+ {
+        def ruby_value
+          Integer(text_value)
+        end
+        alias sql ruby_value
+      }
+    end
+
+    rule float
+      '-'? [0-9]+ '.' [0-9]+ {
+        def ruby_value
+          Float(text_value)
+        end
+
+        alias sql ruby_value
+      }
+    end
+
+    rule field
+#      [a-zA-Z] [a-zA-Z_0-9]*
+      ("state" / "host" / "service" / "description" / "metric_f") {
+        def sql
+          text_value.to_sym
+        end
+      }
+    end
+
+    rule string
+      double_quoted_string
+    end   
+ 
+    # This doesn't work! Taken from the docs... :(    
+    rule double_quoted_string
+      '"' (!'"' . / '\"')* '"' {
+        def ruby_value
+          text_value[1..-2].gsub('\"', '"')
+        end
+        alias sql ruby_value
+      }
+    end
+
+    rule space
+      [\s]+
+    end
+  end
+end

@@ -4,11 +4,15 @@ module UState
     # - Backends spawn Connections with EM.
     # - Connections receive messages from clients, and pass States to the Index.
     # - The Index aggregates states together and informs Sinks.
-  
+ 
+    class Error < RuntimeError; end
+
     require 'eventmachine' 
     require 'ustate/server/connection'
     require 'ustate/server/index'
     require 'ustate/server/backends'
+    require 'treetop'
+    require 'ustate/query_string.rb'
 
     attr_accessor :backends
     attr_accessor :index

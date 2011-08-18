@@ -13,7 +13,7 @@ class UState::Server::Connection < EventMachine::Connection
   # Called when data is received
   def receive_data(data = '')
     @buffer << data
-
+   
     case @state
     when :length
       # Length header
@@ -34,13 +34,28 @@ class UState::Server::Connection < EventMachine::Connection
 
   # Called with a message type and data.
   def receive_message(data)
-    message = UState::Message.decode data
-    if state = message.state
-      @index << state
+    begin
+      message = UState::Message.decode data
+      if states = message.states
+        # State update
+        states.each do |state|
+          @index << state
+        end
+        send UState::Message.new(ok: true)
+      elsif q = message.query
+        res = @index.query(q)
+        send UState::Message.new(ok: true, states: res)
+      else
+        send UState::Message.new(ok: false, error: "unknown message type")
+      end
+    rescue Exception => e
+      m = UState::Message.new(ok: false, error: e.message)
+      send m
     end
+  end
 
-    s = UState::Message.new(ok: true).encode_with_length
-    send_data UState::Message.new(ok: true).encode_with_length
+  def send(message)
+    send_data message.encode_with_length
   end
 
   # Called when the connection is unbound from the socket and can no longer be

@@ -4,6 +4,8 @@ module UState
     # Forwards messages to various receivers.
     # Inserts are NOT threadsafe.
     
+    class ParseFailed < Server::Error; end
+
     require 'sequel'
 
     THREADS = 1000
@@ -20,16 +22,8 @@ module UState
       setup_db
     end
 
-    def setup_db
-      @db.create_table :states do
-        String :host
-        String :service
-        String :state
-        String :description, :text => true
-        Integer :time
-        Float :metric_f
-        primary_key [:host, :service]
-      end
+    def clear
+      setup_db
     end
 
     def <<(s)
@@ -80,6 +74,43 @@ module UState
       end
 
       on_state s
+    end
+
+    # Returns an array of States matching Query.
+    def query(q)
+      parser = QueryStringParser.new
+      if q.string
+        unless expression = parser.parse(q.string)
+          raise ParseFailed, "error parsing #{q.string.inspect} at line #{parser.failure_line}:#{parser.failure_column}: #{parser.failure_reason}"
+        end
+        filter = expression.sql
+      else
+        # No string? All states.
+        filter = true
+      end
+      
+      ds = @db[:states].filter filter
+      ds.all.map do |row|
+        row_to_state row
+      end
+    end
+
+    # Converts a row to a State
+    def row_to_state(row)
+      State.new(row)
+    end
+    
+    def setup_db
+      @db.drop_table :states rescue nil
+      @db.create_table :states do
+        String :host
+        String :service
+        String :state
+        String :description, :text => true
+        Integer :time
+        Float :metric_f
+        primary_key [:host, :service]
+      end
     end
 
     def start
