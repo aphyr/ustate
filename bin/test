@@ -23,7 +23,7 @@ class UState::Test
       'ok'
     when 0.75...0.9
       'warning'
-    when 0.9...1.0
+    when 0.9..1.0
       'critical'
     end
 
