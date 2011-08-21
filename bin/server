@@ -3,5 +3,5 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'ustate'))
 require 'ustate/server'
 
-s = Ustate::Server.new
-s.run
+s = UState::Server.new
+s.start
