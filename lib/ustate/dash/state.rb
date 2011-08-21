@@ -50,4 +50,26 @@ class UState::State
     init
   end
 
+  # Partition a list of states by a field
+  # Returns a hash of field_value => state
+  def partition(states, field)
+    states.inject(Hash.new { [] }) do |p, state|
+      p[state.send(field)] << state
+    end
+  end
+
+  # Sorts states by a field. nil values first.
+  def sort(states, field)
+    states.sort do |a, b|
+      a = a.send field
+      b = b.send field
+      if a.nil?
+        -1
+      elsif b.nil?
+        1
+      else
+        a <=> b
+      end
+    end
+  end
 end

@@ -3,5 +3,5 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'ustate'))
 require 'ustate/dash'
 
-s = Ustate::r.new
-s.run
+UState::Dash.load
+UState::Dash.run!
