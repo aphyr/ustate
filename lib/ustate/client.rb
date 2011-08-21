@@ -4,6 +4,7 @@ class UState::Client
   class ServerError < Error; end
   
   require 'thread'
+  require 'socket'
   require 'time'
 
   HOST = '127.0.0.1'
@@ -87,6 +88,9 @@ class UState::Client
       @locket.synchronize do
         yield (@socket or connect)
       end
+    rescue Errno::EPIPE => e
+      raise unless tries > 3
+      connect and retry
     rescue Errno::ECONNREFUSED => e
       raise unless tries > 3
       connect and retry
