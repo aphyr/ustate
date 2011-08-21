@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+
+# Connects to a server and populates it with a constant stream of states for
+# testing.
+
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'ustate'))
+require 'ustate/client'
+require 'pp'
+
+class UState::Test
+  attr_accessor :client, :hosts, :services, :states
+  def initialize
+    @hosts = (0...10).map { |i| "host#{i}" }
+    @services = %w(cpu mem disk)
+    @states = {}
+    @client = UState::Client.new
+  end
+
+  def evolve(state)
+    m = [[state.metric_f + (rand - 0.5)/10, 0].max, 1].min
+    s = case m
+    when 0...0.75
+      'ok'
+    when 0.75...0.9
+      'warning'
+    when 0.9...1.0
+      'critical'
+    end
+
+    UState::State.new(
+      metric_f: m,
+      state: s,
+      host: state.host,
+      service: state.service,
+      description: "at #{Time.now}"
+    )
+  end
+  
+  def tick
+    pp @states
+    hosts.product(services).each do |id|
+      client << (states[id] = evolve(states[id]))
+    end
+  end
+
+  def run
+    start
+    loop do
+      sleep 1
+      tick
+    end
+  end
+
+  def start
+    hosts.product(services).each do |host, service|
+      states[[host, service]] = UState::State.new(
+        metric_f: 0.5,
+        state: 'ok',
+        description: "Starting up",
+        host: host,
+        service: service
+      )
+    end
+  end
+end
+
+UState::Test.new.run
