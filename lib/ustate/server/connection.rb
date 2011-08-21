@@ -49,6 +49,8 @@ class UState::Server::Connection < EventMachine::Connection
         send UState::Message.new(ok: false, error: "unknown message type")
       end
     rescue Exception => e
+      puts e
+      puts e.backtrace.join("\n")
       m = UState::Message.new(ok: false, error: e.message)
       send m
     end
