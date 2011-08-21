@@ -50,7 +50,7 @@ module UState
         # Update
         if current[:time] <= s.time
           if current[:state] != s.state
-            on_state_change current, new
+            on_state_change current, s
           end           
 
           # Update
