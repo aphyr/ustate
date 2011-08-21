@@ -105,7 +105,7 @@ module UState
     end
 
     def query(*a)
-      self.class.client.query(*a)
+      self.class.client.query(*a).states || []
     end
   end
 end
