@@ -37,15 +37,9 @@ module UState
         longest_common_prefix(tails, prefix + first)
       end
 
-      # An overview of states which are not OK
-      def not_ok
-        bad = Dash.client.query('state != "ok"').states
-        if bad.empty?
-          return '<h2>All services OK! :D</h2>'
-        end
-
-        h2 "Sad Pandas" +
-          ul(bad.map { |s| state_short s })
+      # An overview of states
+      def state_list(states)
+        ul(states.map { |s| state_short s })
       end
 
       def state_grid(states = Dash.client.query)
