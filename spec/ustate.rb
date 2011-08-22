@@ -60,6 +60,7 @@ describe UState::Client do
     server.index.stop
 
     rate = total / (t2 - t1)
+    puts
     puts "#{rate} queries/sec"
     rate.should > 500
   end
@@ -94,5 +95,49 @@ describe UState::Client do
     puts
     puts "#{rate} inserts/sec"    
     rate.should > 500
+  end
+
+  should 'survive inactivity' do
+    @client.<<({
+      state: 'warning',
+      service: 'test',
+    })
+
+    sleep 5
+
+    @client.<<({
+      state: 'warning',
+      service: 'test',
+    }).ok.should.be.true
+  end
+
+  should 'survive local close' do
+    @client.<<({
+      state: 'warning',
+      service: 'test',
+    }).ok.should.be.true
+    
+    @client.socket.close
+    
+    @client.<<({
+      state: 'warning',
+      service: 'test',
+    }).ok.should.be.true
+  end
+
+  should 'survive remote close' do
+    @client.<<({
+      state: 'warning',
+      service: 'test',
+    }).ok.should.be.true
+    
+    server.stop
+    sleep 0.25
+    server.start
+    
+    @client.<<({
+      state: 'warning',
+      service: 'test',
+    }).ok.should.be.true
   end
 end

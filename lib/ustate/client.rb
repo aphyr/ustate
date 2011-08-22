@@ -12,6 +12,8 @@ class UState::Client
 
   TYPE_STATE = 1
 
+  attr_accessor :host, :port, :socket
+
   def initialize(opts = {})
     @host = opts[:host] || HOST
     @port = opts[:port] || PORT
@@ -83,20 +85,24 @@ class UState::Client
   # Yields a connection in the block.
   def with_connection
     tries = 0
-    begin
-      tries += 1
-      @locket.synchronize do
-        yield (@socket or connect)
+    
+    @locket.synchronize do
+      begin
+        tries += 1
+          yield (@socket or connect)
+      rescue IOError => e
+        raise if tries > 3
+        connect and retry
+      rescue Errno::EPIPE => e
+        raise if tries > 3
+        connect and retry
+      rescue Errno::ECONNREFUSED => e
+        raise if tries > 3
+        connect and retry
+      rescue Errno::ECONNRESET => e
+        raise if tries > 3
+        connect and retry
       end
-    rescue Errno::EPIPE => e
-      raise unless tries > 3
-      connect and retry
-    rescue Errno::ECONNREFUSED => e
-      raise unless tries > 3
-      connect and retry
-    rescue Errno::ECONNRESET => e
-      raise unless tries > 3
-      connect and retry
     end
   end
 end
