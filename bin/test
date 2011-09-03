@@ -11,7 +11,7 @@ class UState::Test
   attr_accessor :client, :hosts, :services, :states
   def initialize
     @hosts = (0...10).map { |i| "host#{i}" }
-    @services = %w(cpu mem disk)
+    @services = %w(cpu memory disk)
     @states = {}
     @client = UState::Client.new
   end
