@@ -56,7 +56,7 @@ module UState
     end
  
     rule equals
-      field space? ('=' / '==') space? value {
+      field space? ('==' / '=') space? value {
         def sql
           Sequel::SQL::BooleanExpression.from_value_pairs field.sql => value.sql
         end
