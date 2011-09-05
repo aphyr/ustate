@@ -11,10 +11,27 @@ which can be queried or forwarded to various handlers. A state is simply:
       state: Any string less than 255 bytes, e.g. "ok", "warning", "critical",
       time: The time that the service entered this state, in unix time,
       description: Freeform text,
-      metric_f: A floating-point number associated with this state, e.g. the number of reqs/sec
+      metric_f: A floating-point number associated with this state, e.g. the number of reqs/sec,
+      once: A boolean, described below.
     }
 
-At http://showyou.com, we use UState to monitor the health and performance of hundreds of services across our infrastructure, including CPU, queries/second, latency bounds, disk usage, queues, and others.
+Normally, every state received by the server fires Index#on_state. When
+state.state changes, Index#on_state_change is called. You can, for example,
+register to send a single email whenever a state changes to :warning.
+
+:once states are transient. They fire Index#on_state and #on_state_once, but do
+*not* update the index. They can be used for events which are instantaneous;
+instead of sending {state: error} and {state: ok}, send {state: error,
+once:true}. 
+
+For example, recoverable errors may not hang your application, but
+should be processed by the email notifier. Sending a :once state with
+the error description means you can receive an email for each error,
+instead of two for entering and exiting the error state.
+
+At http://showyou.com, we use UState to monitor the health and performance of
+hundreds of services across our infrastructure, including CPU, queries/second,
+latency bounds, disk usage, queues, and others.
 
 UState also includes a simple dashboard Sinatra app.
 

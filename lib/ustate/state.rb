@@ -6,6 +6,7 @@ class UState::State
   optional :service, :string, 3
   optional :host, :string, 4
   optional :description, :string, 5
+  optional :once, :bool, 6
   optional :metric_f, :float, 15
 
   def metric

@@ -36,6 +36,22 @@ describe UState::Client do
     
     res.ok.should == true
   end
+  
+  should 'send a state once' do
+    @client << {
+      state: 'ok',
+      service: 'test'
+    }
+
+    r = @client << {
+      state: 'error',
+      service: 'test',
+      once: true
+    }
+
+    @client.query('service = "test"').states.first.state.should == 'ok'
+  end
+
 
   should "query states" do
     @client << { state: 'critical', service: '1' }
@@ -45,6 +61,8 @@ describe UState::Client do
       map(&:service).to_set.should == ['1', '2', '3'].to_set
     @client.query('state = "critical"').states.
       map(&:service).to_set.should == ['1', '3'].to_set
+
+    @client.query.states.map(&:service).to_set.should == ['1','2','3'].to_set
   end
 
   should 'query quickly' do

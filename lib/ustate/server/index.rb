@@ -42,10 +42,18 @@ module UState
     def on_state_change(old, new)
     end
 
+    def on_state_once(state)
+    end
+
     def on_state(state)
     end
 
     def process(s)
+      if s.once
+        on_state_once s
+        return on_state s
+      end
+
       if current = @db[:states][host: s.host, service: s.service]
         # Update
         if current[:time] <= s.time
