@@ -1,8 +1,11 @@
 git clone git://github.com/aphyr/ustate.git
 
+# For client
+gem install beefcake
+
 # For server
-gem install treetop eventmachine sequel sqlite3
-gem install beefcake -v 0.3.2
+gem install treetop eventmachine sequel sqlite3 trollop
+gem install beefcake
 
 # For dashboard
 gem install sinatra thin erubis sass

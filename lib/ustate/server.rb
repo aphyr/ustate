@@ -17,10 +17,10 @@ module UState
     attr_accessor :backends
     attr_accessor :index
    
-    def initialize
+    def initialize(opts = {})
       # Backends
       @backends = []
-      b = Backends::TCP.new
+      b = Backends::TCP.new opts
       b.server = self
       @backends << b
 

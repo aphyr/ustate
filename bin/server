@@ -2,6 +2,15 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'ustate'))
 require 'ustate/server'
+require 'trollop'
 
-s = UState::Server.new
+o = Trollop.options do
+  opt :host, 'Address to listen on', :default => '127.0.0.1'
+  opt :port, 'Port to listen on', :default => 55956
+end
+
+s = UState::Server.new(
+  host: o[:host],
+  port: o[:port]
+)
 s.start

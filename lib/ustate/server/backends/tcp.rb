@@ -17,6 +17,7 @@ class UState::Server
 
     # Connect the server
     def connect
+      puts "Listening on #{@host}:#{@port}"
       @signature = EventMachine.start_server(@host, @port, Connection, &method(:initialize_connection))
     end
 
