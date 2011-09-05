@@ -48,12 +48,12 @@ To try it out, install all the gems above, and clone the repository. Start the s
 
 UState listens on TCP socket host:port, and accepts connections from clients. Start a basic testing client with
 
-   bin/test
+    bin/test
 
 The tester spews randomly generated statistics at a server on the default local host and port. To see it in action, run the dashboard:
 
-  cd lib/ustate/dash
-  ../../../bin/dash
+    cd lib/ustate/dash
+    ../../../bin/dash
 
 
 The Dashboard
