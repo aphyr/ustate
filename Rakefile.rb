@@ -1,8 +1,8 @@
 $:.unshift(File.join(File.dirname(__FILE__), 'lib'))
 
 require 'rubygems'
-require 'rake/gempackagetask'
-require 'rake/rdoctask'
+require 'rubygems/package_task'
+require 'rdoc/task'
 require 'ustate/version'
 require 'find'
  
@@ -21,7 +21,10 @@ gemspec = Gem::Specification.new do |s|
   s.homepage = 'https://github.com/aphyr/ustate'
   s.platform = Gem::Platform::RUBY
   s.summary = 'Client for the distributed state server ustate.'
- 
+
+  s.add_dependency 'beefcake', '>= 0.3.5' 
+  s.add_dependency 'trollop', '>= 1.16.2'
+   
   s.files = FileList['{lib}/**/*', 'LICENSE', 'README.markdown'].to_a
   s.executables = []
   s.require_path = 'lib'
@@ -29,12 +32,11 @@ gemspec = Gem::Specification.new do |s|
  
   s.required_ruby_version = '>= 1.8.7'
 end
- 
-Rake::GemPackageTask.new(gemspec) do |p|
-  p.need_tar_gz = true
+
+Gem::PackageTask.new gemspec do |p|
 end
  
-Rake::RDocTask.new do |rd|
+RDoc::Task.new do |rd|
   rd.main = 'UState'
   rd.title = 'UState'
   rd.rdoc_dir = 'doc'
