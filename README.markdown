@@ -55,6 +55,33 @@ The tester spews randomly generated statistics at a server on the default local 
     cd lib/ustate/dash
     ../../../bin/dash
 
+The client
+==========
+
+You can use the git repo, or the gem.
+
+    gem install ustate-client
+
+Then:
+
+    require 'ustate'
+    require 'ustate/client'
+
+    # Create a client
+    c = UState::Client.new(
+      host: "my.host",    # Default localhost
+      port: 1234          # Default 55956
+    )
+    
+    # Insert a state
+    c << {
+      state: "ok",
+      service: "My service"
+    }
+
+    # Query for states
+    c.query.states # => [UState::State(state: 'ok', service: 'My service')]
+    c.query('state != "ok"').states # => []
 
 The Dashboard
 =============
@@ -90,12 +117,12 @@ You can also query states using a very basic expression language. The grammar is
     state = "ok"
     (service =~ "disk%") or (state == "critical" and host =~ "%.trioptimum.com")
 
-Search queries will return a message with repeated States matching that expression. An empty expression matches all states.
+Search queries will return a message with repeated States matching that expression. An null expression will return no states.
 
 Performance
 ===========
 
-It's Ruby. It ain't gonna be fast. However, on my 4-year-old core 2 duo, I see >600 inserts/sec or queries/sec. The client is fully threadsafe, and performs well concurrently. I will continue to tune UState for latency and throughput, and welcome patches.
+It's Ruby. It ain't gonna be fast. However, on my 4-year-old core 2 duo, I see >750 inserts/sec or queries/sec. The client is fully threadsafe, and performs well concurrently. I will continue to tune UState for latency and throughput, and welcome patches.
 
 For large installations, I plan to implement a selective forwarder. Local ustate servers can accept high volumes of states from a small set of nodes, and forward updates at a larger granularity to supervisors, and so forth, in a tree. The query language should be able to support proxying requests to the most recent source of a state, so very large sets of services can be maintained at high granularity.
 
