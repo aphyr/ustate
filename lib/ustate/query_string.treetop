@@ -5,6 +5,12 @@ module UState
     
     rule or
       first:and rest:(space 'or' space and)* {
+        def query
+          rest.elements.map { |x| x.and }.inject(first.query) do |a, sub|
+            Query::Or.new a, sub.query
+          end
+        end
+
         def sql
           rest.elements.map { |x| x.and }.
             inject(first.sql) do |a, sub|
@@ -16,6 +22,12 @@ module UState
 
     rule and
       first:primary rest:(space 'and' space primary)* {
+        def query
+          rest.elements.map { |x| x.primary }.inject(first.query) do |a, sub|
+            Query::And.new a, sub.query
+          end
+        end
+
         def sql
           rest.elements.map { |x| x.primary }.
             inject(first.sql) do |a, sub|
@@ -27,6 +39,10 @@ module UState
 
     rule primary
       '(' space? x:or space? ')' {
+        def query
+          x.query
+        end
+
         def sql
           x.sql
         end
@@ -41,6 +57,10 @@ module UState
 
     rule approximately
       field space? '=~' space? string {
+        def query
+          Query::Approximately.new field.sql, string.sql
+        end
+
         def sql
           Sequel::SQL::StringExpression.like field.sql, string.sql
         end
@@ -49,6 +69,10 @@ module UState
 
     rule not_equals
       field space? '!=' space? value {
+        def query
+          Query::NotEquals.new field.sql, value.sql
+        end
+        
         def sql
           Sequel::SQL::BooleanExpression.from_value_pairs({field.sql => value.sql}, :AND, true)
         end
@@ -57,6 +81,10 @@ module UState
  
     rule equals
       field space? ('==' / '=') space? value {
+        def query
+          Query::Equals.new field.sql, value.sql
+        end
+
         def sql
           Sequel::SQL::BooleanExpression.from_value_pairs field.sql => value.sql
         end

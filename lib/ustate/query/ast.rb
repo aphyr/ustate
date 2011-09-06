@@ -1,0 +1,6 @@
+require 'ustate/query/and'
+require 'ustate/query/approximately'
+require 'ustate/query/equals'
+require 'ustate/query/not_equals'
+require 'ustate/query/not'
+require 'ustate/query/or'

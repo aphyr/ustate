@@ -19,6 +19,10 @@ module UState
       @threads = opts[:threads] || THREADS
       @pool = []
 
+      @on_state_change = []
+      @on_state_once = []
+      @on_state = []
+
       setup_db
     end
 
@@ -39,13 +43,34 @@ module UState
       end
     end
 
-    def on_state_change(old, new)
+    def on_state_change(old = nil, new = nil, &block)
+      if block_given?
+        @on_state_change |= [block]
+      else
+        @on_state_change.each do |callback|
+          callback.call old, new
+        end
+      end
     end
 
-    def on_state_once(state)
+    def on_state_once(state = nil, &block)
+      if block_given?
+        @on_state_change |= [block]
+      else
+        @on_state_change.each do |callback|
+          callback.call state
+        end
+      end
     end
 
-    def on_state(state)
+    def on_state(state = nil, &block)
+      if block_given?
+        @on_state_change |= [block]
+      else
+        @on_state_change.each do |callback|
+          callback.call state
+        end
+      end
     end
 
     def process(s)

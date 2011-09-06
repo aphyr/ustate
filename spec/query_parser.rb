@@ -14,7 +14,7 @@ include UState
 
 describe UState::QueryString do
   def parse(string)
-    tree = State::QueryStringParser.new.parse string
+    tree = QueryStringParser.new.parse string
     tree.should.not.be.nil
     tree
   end
@@ -33,6 +33,18 @@ describe UState::QueryString do
   def s(string, dataset)
     it "SQL #{string}" do
       ds.filter(parse(string).sql).sql.should == (dataset.sql rescue dataset)
+    end
+  end
+
+  def m(string, good = [], bad = [])
+    it "Query#=== for #{string}" do
+      q = parse(string).query
+      good.each do |state|
+        q.should === State.new(state)
+      end
+      bad.each do |state|
+        q.should.not === State.new(state)
+      end
     end
   end
 
@@ -59,4 +71,11 @@ describe UState::QueryString do
     "SELECT * FROM `states` WHERE ((`state` = 1) OR ((`state` = 2) AND ((`state` = 3) OR (`state` = 4))))"
   s '((state = 1 or state = 2) and state = 3) or state = 4', 
     "SELECT * FROM `states` WHERE ((((`state` = 1) OR (`state` = 2)) AND (`state` = 3)) OR (`state` = 4))"
+
+  # Test AST matching
+  m 'state = "test"', [{state: 'test'}], [{}, {state: 'bad'}]
+  m 'metric_f = 2', [{metric_f: 2.0}], [{}, {metric_f: 3.0}]
+  m 'metric_f = 2.0', [{metric_f: 2.0}], [{}, {metric_f: 3.0}]
+  m 'state != "test"', [{}, {state: 'bad'}], [{state: 'test'}]
+  m 'state =~ "a"', [{state: 'a'}], [{}, {state: ' a'}, {state: 'a '}]
 end

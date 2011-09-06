@@ -34,6 +34,12 @@ module UState
     end
 
     module Or2
+      def query
+        rest.elements.map { |x| x.and }.inject(first.query) do |a, sub|
+          Query::Or.new a, sub.query
+        end
+      end
+
       def sql
         rest.elements.map { |x| x.and }.
           inject(first.sql) do |a, sub|
@@ -135,6 +141,12 @@ module UState
     end
 
     module And2
+      def query
+        rest.elements.map { |x| x.primary }.inject(first.query) do |a, sub|
+          Query::And.new a, sub.query
+        end
+      end
+
       def sql
         rest.elements.map { |x| x.primary }.
           inject(first.sql) do |a, sub|
@@ -219,6 +231,10 @@ module UState
     end
 
     module Primary1
+      def query
+        x.query
+      end
+
       def sql
         x.sql
       end
@@ -348,6 +364,10 @@ module UState
     end
 
     module Approximately1
+      def query
+        Query::Approximately.new field.sql, string.sql
+      end
+
       def sql
         Sequel::SQL::StringExpression.like field.sql, string.sql
       end
@@ -424,6 +444,10 @@ module UState
     end
 
     module NotEquals1
+      def query
+        Query::NotEquals.new field.sql, value.sql
+      end
+      
       def sql
         Sequel::SQL::BooleanExpression.from_value_pairs({field.sql => value.sql}, :AND, true)
       end
@@ -500,6 +524,10 @@ module UState
     end
 
     module Equals1
+      def query
+        Query::Equals.new field.sql, value.sql
+      end
+
       def sql
         Sequel::SQL::BooleanExpression.from_value_pairs field.sql => value.sql
       end
@@ -529,21 +557,21 @@ module UState
         s0 << r2
         if r2
           i4 = index
-          if has_terminal?('=', false, index)
-            r5 = instantiate_node(SyntaxNode,input, index...(index + 1))
-            @index += 1
+          if has_terminal?('==', false, index)
+            r5 = instantiate_node(SyntaxNode,input, index...(index + 2))
+            @index += 2
           else
-            terminal_parse_failure('=')
+            terminal_parse_failure('==')
             r5 = nil
           end
           if r5
             r4 = r5
           else
-            if has_terminal?('==', false, index)
-              r6 = instantiate_node(SyntaxNode,input, index...(index + 2))
-              @index += 2
+            if has_terminal?('=', false, index)
+              r6 = instantiate_node(SyntaxNode,input, index...(index + 1))
+              @index += 1
             else
-              terminal_parse_failure('==')
+              terminal_parse_failure('=')
               r6 = nil
             end
             if r6

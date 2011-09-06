@@ -12,7 +12,8 @@ module UState
     require 'ustate/server/index'
     require 'ustate/server/backends'
     require 'treetop'
-    require 'ustate/query_string.rb'
+    require 'ustate/query_string'
+    require 'ustate/query/ast'
 
     attr_accessor :backends
     attr_accessor :index
@@ -27,6 +28,11 @@ module UState
       @index = Index.new
 
       setup_signals
+    end
+
+    def emailer(opts = {})
+      require 'ustate/emailer'
+      @emailer ||= UState::Emailer.new(@index, opts)
     end
 
     def start
