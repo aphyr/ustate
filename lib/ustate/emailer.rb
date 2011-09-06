@@ -2,17 +2,25 @@ module UState
   class Emailer
     require 'net/smtp'
 
+    attr_accessor :from
+    attr_accessor :host
+    attr_accessor :name
+
     # Registers self with index.
     # Options:
     #   :host: The SMTP host to connect to. Default 'localhost'
     #   :name: The From name used. Default "ustate".
     #   :from: The From address used: e.g. "ustate@your_domain.com"
     def initialize(index, opts = {})
-      @opts = {
+      opts = {
         :name => 'ustate',
         :host => 'localhost'
       }.merge opts
-      raise ArgumentError, "no from address" unless @opts[:from]
+
+      @from = opts[:from]
+      @name = opts[:name]
+      @host = opts[:host]
+      raise ArgumentError, "no from address" unless @from
 
       @tell = {}
 
@@ -36,18 +44,16 @@ module UState
 
       # SMTP message
       message = <<EOF
-From: #{@opts[:name]} <#{@opts[:from]}>
+From: #{@name} <#{@from}>
 To: <#{address}>
 Subject: #{subject.gsub("\n", ' ')}
 
 #{body}
 EOF
 
-      x = Net::SMTP.start(@opts[:host]) do |smtp|
-        puts "Connected to #{smtp.inspect}"
-        smtp.send_message message, @opts[:from], address
+      Net::SMTP.start(@host) do |smtp|
+        smtp.send_message message, @from, address
       end
-      p x
     end
 
     # Dispatch emails to each address which is interested in this state

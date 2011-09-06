@@ -56,12 +56,12 @@ For the dashboard:
 
      gem install sinatra thin erubis sass
 
-Getting started
-===============
+Demo
+====
 
 To try it out, install all the gems above, and clone the repository. Start the server with
 
-    bin/server [--host host] [--port port]
+    bin/server
 
 UState listens on TCP socket host:port, and accepts connections from clients. Start a basic testing client with
 
@@ -72,8 +72,48 @@ The tester spews randomly generated statistics at a server on the default local 
     cd lib/ustate/dash
     ../../../bin/dash
 
-The client
-==========
+Server
+======
+
+The server loads a file in the working directory named config.rb. Override with
+--config-file.  Its contents are instance-evaled in the context of the current
+server. You can use this to extend ustate with additional behavior.
+
+Email
+-----
+
+config.rb:
+    # Email comes from this address (required):
+    emailer.from = 'ustate@your.net'
+
+    # Use this SMTP relay (default 127.0.0.1)
+    emailer.host = '123.4.56.7'
+    
+    # Receive mail when a state transition matches any of ...
+    emailer.tell 'you@gmail.com', 'state = "error" or state = "critical"'
+    emailer.tell 'you@gmail.com', 'service =~ "mysql%"'
+
+Custom hooks
+------------
+
+config.rb:
+    # Log all states received to console.
+    index.on_state do |s|
+      p s
+    end
+    
+    # Forward state transitions to another server.
+    require 'ustate/client'
+    client = UState::Client.new :host => '123.45.67.8'
+    index.on_state_change do |old, new|
+      client << new
+    end
+    index.on_state_once do |state|
+      client << state
+    end
+
+Client
+======
 
 You can use the git repo, or the gem.
 

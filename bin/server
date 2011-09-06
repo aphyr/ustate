@@ -7,10 +7,12 @@ require 'trollop'
 o = Trollop.options do
   opt :host, 'Address to listen on', :default => '127.0.0.1'
   opt :port, 'Port to listen on', :default => 55956
+  opt :"config-file", "Configuration file (ruby code, instance-evaled in server)", :default => 'config.rb'
 end
 
 s = UState::Server.new(
   host: o[:host],
   port: o[:port]
 )
+s.instance_eval File.read(o[:"config-file"])
 s.start
