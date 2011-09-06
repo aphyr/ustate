@@ -8,7 +8,10 @@ require 'set'
 
 Bacon.summary_on_exit 
 
-email = ARGV[0] or raise ArgumentError, "I need an email, please."
+unless email = ARGV[0]
+  puts "I need an email, please."
+  exit!
+end
 
 include UState
 
@@ -35,29 +38,49 @@ describe UState::Client do
 
   should 'send email' do
     r = @client << {
-      state: 'error',
+      state: 'ok',
       once: true,
-      service: 'test',
+      service: 'special 1',
       description: 'desc',
       metric_f: 1.0
     }
     r.ok.should.be.true
+    sleep 0.1
   end
 
   should 'notify once' do
-    LOG = []
+    LOG ||= []
+    LOG.clear
+
     emailer = server.emailer
     def emailer.email(to, state)
-      puts "Called with #{to.inspect}, #{state.inspect}"
       LOG << [to, state]
     end
 
-    @client << {state: 'error', host: nil, service: 'test', once: true}
+    s = {state: 'error', host: nil, service: 'test', once: true}
+    @client << s
     sleep 0.25
     LOG.size.should == 1
-    LOG[1][1].should =~ /Subject: test transient error/
+    LOG[0][0].should == email
+    LOG[0][1].state.should == 'error'
   end
 
   should 'notify on change' do
+    LOG ||= []
+    LOG.clear
+
+    emailer = server.emailer
+    def emailer.email(to, state)
+      LOG << [to, state]
+    end
+
+    @client << {state: 'ok', host: nil, service: 'test'}
+    @client << {state: 'ok', host: nil, service: 'test'}
+    @client << {state: 'error', host: nil, service: 'test'}
+    @client << {state: 'error', host: nil, service: 'test'}
+    sleep 0.25
+    LOG.size.should == 1
+    LOG[0][0].should == email
+    LOG[0][1].state.should == 'error'
   end
 end

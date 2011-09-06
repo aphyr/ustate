@@ -34,7 +34,7 @@ module UState
       # Body
       body = "#{subject}: #{s.description}"
 
-      # SMTP messag
+      # SMTP message
       message = <<EOF
 From: #{@opts[:name]} <#{@opts[:from]}>
 To: <#{address}>
@@ -43,9 +43,11 @@ Subject: #{subject.gsub("\n", ' ')}
 #{body}
 EOF
 
-      Net::SMTP.start(@opts[:host]) do |smtp|
+      x = Net::SMTP.start(@opts[:host]) do |smtp|
+        puts "Connected to #{smtp.inspect}"
         smtp.send_message message, @opts[:from], address
       end
+      p x
     end
 
     # Dispatch emails to each address which is interested in this state

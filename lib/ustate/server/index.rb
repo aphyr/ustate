@@ -55,9 +55,9 @@ module UState
 
     def on_state_once(state = nil, &block)
       if block_given?
-        @on_state_change |= [block]
+        @on_state_once |= [block]
       else
-        @on_state_change.each do |callback|
+        @on_state_once.each do |callback|
           callback.call state
         end
       end
@@ -65,9 +65,9 @@ module UState
 
     def on_state(state = nil, &block)
       if block_given?
-        @on_state_change |= [block]
+        @on_state |= [block]
       else
-        @on_state_change.each do |callback|
+        @on_state.each do |callback|
           callback.call state
         end
       end
