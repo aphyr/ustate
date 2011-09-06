@@ -179,14 +179,12 @@ Search queries will return a message with repeated States matching that expressi
 Performance
 ===========
 
-It's Ruby. It ain't gonna be fast. However, on my 4-year-old core 2 duo, I see >750 inserts/sec or queries/sec. The client is fully threadsafe, and performs well concurrently. I will continue to tune UState for latency and throughput, and welcome patches.
+On a macbook pro 8,3, I see >1300 queries/sec or >1200 inserts/sec. The client is fully threadsafe, and performs well concurrently. I will continue to tune UState for latency and throughput, and welcome patches.
 
 For large installations, I plan to implement a selective forwarder. Local ustate servers can accept high volumes of states from a small set of nodes, and forward updates at a larger granularity to supervisors, and so forth, in a tree. The query language should be able to support proxying requests to the most recent source of a state, so very large sets of services can be maintained at high granularity.
 
 Goals
 =====
-
-Immediately, I'll be porting our internal email alerter to UState. Users register for interest in certain types of states or transitions, and receive emails when those events occur.
 
 In the medium term, I'll be connecting UState to Graphite (or perhaps another
 graphing tool) for metrics archival and soft-realtime graphs. I have an
