@@ -20,7 +20,6 @@ module UState
       @from = opts[:from]
       @name = opts[:name]
       @host = opts[:host]
-      raise ArgumentError, "no from address" unless @from
 
       @tell = {}
 
@@ -30,6 +29,8 @@ module UState
 
     # Send an email to address about state.
     def email(address, s)
+      raise ArgumentError, "no from address" unless @from
+      
       # Subject
       subject = "#{s.host} #{s.service} #{s.state}"
       if s.once
