@@ -102,6 +102,9 @@ class UState::Client
       rescue Errno::ECONNRESET => e
         raise if tries > 3
         connect and retry
+      rescue InvalidResponse => e
+        raise if tries > 3
+        connect and retry
       end
     end
   end
