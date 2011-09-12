@@ -35,7 +35,7 @@ module UState
       raise ArgumentError, "no from address" unless @from
       
       # Subject
-      subject = "#{s.host} #{s.service} #{s.state}"
+      subject = "#{s.host} #{s.service}"
       if s.once
         subject << " transient "
       else
