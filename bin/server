@@ -14,5 +14,7 @@ s = UState::Server.new(
   host: o[:host],
   port: o[:port]
 )
-s.instance_eval File.read(o[:"config-file"])
+if (config = File.read(o[:"config-file"]) rescue nil)
+  s.instance_eval config
+end
 s.start
