@@ -59,11 +59,10 @@ EOF
 
     # Dispatch emails to each address which is interested in this state
     def receive(*states)
-      state = states.last
       Thread.new do
         @tell.each do |address, q|
-          if q === state
-            email address, state
+          if states.any? { |state| p  state; q === state }
+            email address, states.last
           end
         end
       end
