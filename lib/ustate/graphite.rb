@@ -22,7 +22,8 @@ module UState
     # Formats a state into a Graphite metric path.
     def path(state)
       if state.host
-        "#{state.host}.#{state.service.gsub(' ', '.')}"
+        host = state.host.split('.').reverse.join('.')
+        "#{host}.#{state.service.gsub(' ', '.')}"
       else
         state.service.gsub(' ', '.')
       end
@@ -47,8 +48,10 @@ module UState
     end
 
     def receive(state)
-      if @query === state
-        forward state
+      Thread.new do
+        if @query === state
+          forward state
+        end
       end
     end
 

@@ -26,7 +26,7 @@ loop do
   client << {
     service: 'graphite',
     state: 'ok',
-    metric_f: [0.0, metric + rand - 0.5].max
+    metric_f: [0.0, metric + rand].max
   }
   sleep 1
 end
