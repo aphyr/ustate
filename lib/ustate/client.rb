@@ -89,7 +89,7 @@ class UState::Client
     @locket.synchronize do
       begin
         tries += 1
-          yield (@socket or connect)
+          yield (@socket || connect)
       rescue IOError => e
         raise if tries > 3
         connect and retry

@@ -17,6 +17,9 @@ module UState
 
     attr_accessor :backends
     attr_accessor :index
+    attr_writer :aggregator
+    attr_writer :emailer
+    attr_writer :graphite
    
     def initialize(opts = {})
       # Backends
@@ -28,6 +31,11 @@ module UState
       @index = Index.new
 
       setup_signals
+    end
+
+    def aggregator(opts = {})
+      require 'ustate/aggregator'
+      @aggregator ||= UState::Aggregator.new(@index, opts)
     end
 
     def emailer(opts = {})

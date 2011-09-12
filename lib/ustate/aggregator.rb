@@ -1,36 +1,65 @@
-class Aggregator
-  # Combines states into one.
-  
-  def initialize(index)
-    @index = index
-    @index.on_state &method(:receive)
+module UState
+  class Aggregator
+    # Combines states periodically.
 
-    @combinations = {}
-  end
+    INTERVAL = 1
 
-  # Combines states matching query with the given block. The block
-  # receives an array of states which presently match.
-  def combine(query, &block)
-    parser = QueryStringParser.new
-    q = parser.parse(query_string)
-    unless q
-      raise ArgumentError, "error parsing #{query_string.inspect} at line #{parser.failure_line}:#{parser.failure_column}: #{parser.failure_reason}"
+    attr_accessor :interval
+    attr_accessor :folds
+    def initialize(index, opts = {})
+      @index = index
+
+      @folds = {}
+      @interval = opts[:interval] || INTERVAL
+
+      run
     end
-    q = q.query
 
-    @combinations[block] = if existing = @combinations[block]
-      Query::Or.new existing, q
-    else
-      q
+    # Combines states matching query with State.average
+    def average(query, init)
+      fold query do |states|
+        State.average states, init
+      end
     end
-  end
 
-  def receive(state)
-    Thread.new do
-      @combinations.each do |f, query|
-        if query === state
-          @index << f[query]
+    # Combines states matching query with the given block. The block
+    # receives an array of states which presently match.
+    # 
+    # Example:
+    #   fold 'service = "api % reqs/sec"' do |states|
+    #     states.inject(State.new(service: 'api reqs/sec')) do |combined, state|
+    #       combined.metric_f += state.metric_f
+    #       combined
+    #     end
+    #   end
+    def fold(query, &block)
+      @folds[block] = if existing = @folds[block]
+        "(#{existing}) or (#{q})"
+      else
+        query
+      end
+    end
+
+    # Polls index for states matching each fold, applies fold, and inserts into
+    # index.
+    def run
+      Thread.new do
+        loop do
+          interval = (@interval / @folds.size) rescue @interval
+          @folds.each do |f, query|
+            if combined = f[@index.query(Query.new(string: query))]
+              @index << combined
+            end
+            sleep interval
+          end
         end
+      end
+    end
+
+    # Combines states matching query with State.sum
+    def sum(query, init)
+      fold query do |states|
+        State.sum states, init
       end
     end
   end
