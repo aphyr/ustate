@@ -13,7 +13,12 @@ class UState::State
   # and the mean time. If init is provided, its values override (where present)
   # the computed ones.
   def self.average(states, init = State.new)
-    init = init.dup
+    init = case init
+           when State
+             init.dup
+           else
+             State.new init
+           end
     
     # Metric
     init.metric_f ||= states.inject(0.0) { |a, state|
@@ -45,7 +50,12 @@ class UState::State
   # and the mean time. If init is provided, its values override (where present)
   # the computed ones.
   def self.sum(states, init = State.new)
-    init = init.dup
+    init = case init
+           when State
+             init.dup
+           else
+             State.new init
+           end
     
     # Metric
     init.metric_f ||= states.inject(0.0) { |a, state|
@@ -76,7 +86,12 @@ class UState::State
   # Finds the maximum of a set of states. Metric is the maximum. State is the
   # highest, as defined by Dash.config.state_order. Time is the mean.
   def self.max(states, init = State.new)
-    init = init.dup
+    init = case init
+           when State
+             init.dup
+           else
+             State.new init
+           end
     
     # Metric
     init.metric_f ||= states.inject(0.0) { |a, state|
