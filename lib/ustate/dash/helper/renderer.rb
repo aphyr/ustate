@@ -101,11 +101,17 @@ module UState
       #                  names have common prefixes removed.
       #   hosts: an array of hosts for rows. Default is every host present in
       #          states, sorted.
+      #   transpose: Hosts go across, services go down. Enables :global_maxima.
+      #   global_maximum: Compute default maxima for services globally,
+      #                  instead of a different maximum for each service.
       def state_chart(states, opts = {})
         o = {
           :maxima => {},
           :service_names => {}
         }.merge opts
+        if o[:transpose] and not o.include?(:global_maximum)
+          o[:global_maximum] = true
+        end
 
         # Get all services
         services = states.map { |s| s.service }.compact.uniq.sort
@@ -118,10 +124,18 @@ module UState
         end.merge o[:service_names]
 
         # Compute maximum for each service
-        maxima = states.inject(Hash.new(0)) do |m, s|
-          m[s.service] = [s.metric, m[s.service]].max
-          m
-        end.merge o[:maxima]
+        maxima = if o[:global_maximum]
+          max = states.map(&:metric).max
+          services.inject({}) do |m, s|
+            m[s] = max
+            m
+          end.merge o[:maxima]
+        else
+          states.inject(Hash.new(0)) do |m, s|
+            m[s.service] = [s.metric, m[s.service]].max
+            m
+          end.merge o[:maxima]
+        end
 
         # Compute union of all hosts for these states, if no
         # list of hosts explicitly given.
@@ -139,27 +153,51 @@ module UState
         # Title
         title = o[:title] || prefix.capitalize rescue 'Unknown'
 
-        h2(title) +
-        table(
-          tr(
-            th,
-            *services.map do |service|
-              th service_names[service]
-            end
-          ),
-          *hosts.map do |host|
+        if o[:transpose]
+          h2(title) +
+          table(
             tr(
-              th(host),
-              *services.map do |service|
-                s = by[[host, service]]
-                td(
-                  s ? state_bar(s, max: maxima[service]) : nil
-                )
+              th,
+              *hosts.map do |host|
+                th host
               end
-            )
-          end,
-          :class => 'chart'
-        )
+            ),
+            *services.map do |service|
+              tr(
+                th(service_names[service]),
+                *hosts.map do |host|
+                  s = by[[host, service]]
+                  td(
+                    s ? state_bar(s, max: maxima[service]) : nil
+                  )
+                end
+              )
+            end,
+            :class => 'chart'
+          )
+        else
+          h2(title) +
+          table(
+            tr(
+              th,
+              *services.map do |service|
+                th service_names[service]
+              end
+            ),
+            *hosts.map do |host|
+              tr(
+                th(host),
+                *services.map do |service|
+                  s = by[[host, service]]
+                  td(
+                    s ? state_bar(s, max: maxima[service]) : nil
+                  )
+                end
+              )
+            end,
+            :class => 'chart'
+          )
+        end
       end
 
       # Renders a state as a short tag.
