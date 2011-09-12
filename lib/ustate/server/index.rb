@@ -83,7 +83,7 @@ module UState
         # Update
         if current[:time] <= s.time
           if current[:state] != s.state
-            on_state_change current, s
+            on_state_change row_to_state(current), s
           end           
 
           # Update
