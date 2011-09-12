@@ -10,8 +10,11 @@ module UState
 
     THREADS = 1000
     BUFFER_SIZE = 10
+    # Forget about states after
+    EXPIRY = 1000
     
-    attr_reader :db, :queue 
+    attr_reader :db, :queue
+    attr_accessor :expiry
 
     def initialize(opts = {})
       @db = Sequel.sqlite
@@ -22,6 +25,8 @@ module UState
       @on_state_change = []
       @on_state_once = []
       @on_state = []
+
+      @expiry = opts[:expiry] || EXPIRY
 
       setup_db
     end
@@ -128,6 +133,36 @@ module UState
       end
     end
 
+    # Remove states older than @expiry
+    def reap
+      @db[:states].filter { |s| 
+        s.time < (Time.now - @expiry).to_i 
+      }.each do |row|
+        on_state_change(
+          row_to_state(row),
+          row_to_state(
+            row.merge(
+              state: 'unknown',
+              description: "ustate has not heard from this service since #{Time.at(row[:time])}",
+              metric_f: nil, 
+              time: Time.now.to_i
+            )
+          )
+        )
+        @db[:states].filter(host: row[:host], state: row[:state]).delete
+      end
+    end
+
+    # Periodically expire old states.
+    def reaper
+      Thread.new do
+        loop do
+          sleep 1
+          reap
+        end
+      end
+    end
+
     # Converts a row to a State
     def row_to_state(row)
       State.new(row)
@@ -149,6 +184,7 @@ module UState
     def start
       stop!
       @pool = []
+      @reaper = reaper
     end
 
     # Finish up
