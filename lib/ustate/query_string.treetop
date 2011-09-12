@@ -92,7 +92,7 @@ module UState
     end
 
     rule value
-      double_quoted_string / float / integer
+      double_quoted_string / float / integer / null
     end
 
     rule integer
@@ -132,6 +132,15 @@ module UState
       '"' (!'"' . / '\"')* '"' {
         def ruby_value
           text_value[1..-2].gsub('\"', '"')
+        end
+        alias sql ruby_value
+      }
+    end
+
+    rule null
+      ('null' / 'nil') {
+        def ruby_value
+          nil
         end
         alias sql ruby_value
       }

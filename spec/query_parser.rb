@@ -59,6 +59,8 @@ describe UState::QueryString do
   t 'state = 2 and state = 3 or state = 3 and state = 2 or state = 4 and state = 2 or state = 5'
   t '(state = 2 or state = 3) and (state = 3 or (state = 3))'
 
+  s 'state = nil', ds.filter(:state => nil)
+  s 'state = null', ds.filter(:state => nil)
   s 'state = "test"', ds.filter(:state => 'test')
   s 'state = 2', ds.filter(:state => 2)
   s 'state = -1.24', ds.filter(:state => -1.24)

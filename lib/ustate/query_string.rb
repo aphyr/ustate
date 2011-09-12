@@ -635,8 +635,13 @@ module UState
           if r3
             r0 = r3
           else
-            @index = i0
-            r0 = nil
+            r4 = _nt_null
+            if r4
+              r0 = r4
+            else
+              @index = i0
+              r0 = nil
+            end
           end
         end
       end
@@ -1044,6 +1049,57 @@ module UState
       end
 
       node_cache[:double_quoted_string][start_index] = r0
+
+      r0
+    end
+
+    module Null0
+      def ruby_value
+        nil
+      end
+      alias sql ruby_value
+    end
+
+    def _nt_null
+      start_index = index
+      if node_cache[:null].has_key?(index)
+        cached = node_cache[:null][index]
+        if cached
+          cached = SyntaxNode.new(input, index...(index + 1)) if cached == true
+          @index = cached.interval.end
+        end
+        return cached
+      end
+
+      i0 = index
+      if has_terminal?('null', false, index)
+        r1 = instantiate_node(SyntaxNode,input, index...(index + 4))
+        @index += 4
+      else
+        terminal_parse_failure('null')
+        r1 = nil
+      end
+      if r1
+        r0 = r1
+        r0.extend(Null0)
+      else
+        if has_terminal?('nil', false, index)
+          r2 = instantiate_node(SyntaxNode,input, index...(index + 3))
+          @index += 3
+        else
+          terminal_parse_failure('nil')
+          r2 = nil
+        end
+        if r2
+          r0 = r2
+          r0.extend(Null0)
+        else
+          @index = i0
+          r0 = nil
+        end
+      end
+
+      node_cache[:null][start_index] = r0
 
       r0
     end
