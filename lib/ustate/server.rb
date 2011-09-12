@@ -35,6 +35,11 @@ module UState
       @emailer ||= UState::Emailer.new(@index, opts)
     end
 
+    def graphite(opts = {})
+      require 'ustate/graphite'
+      @graphite ||= UState::Graphite.new(@index, opts)
+    end
+
     def start
       @index.start
      
