@@ -1,11 +1,16 @@
 <html>
 <head>
   <title>Dashboard</title>
-  <meta http-equiv="refresh" content="1" />
   <link rel="stylesheet" type="text/css" href="/css" />
+
+  <script type="text/javascript">
+    setTimeout(function() {
+      location.reload(true);
+    }, 1000);
+  </script>
 </head>
 
-<body>
+<body onload="refresh();">
   <div>
     <h1>Dashboard</h1>
     <span style="position: absolute; top: 4px; right: 4px;">(as of <%= time Time.now.to_i %>)</span>
