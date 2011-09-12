@@ -1,5 +1,8 @@
 module UState
   class Emailer
+    # Sends emails when the index receives state transitions matching specific
+    # queries.
+
     require 'net/smtp'
 
     attr_accessor :from
