@@ -45,7 +45,7 @@ module UState
     def start
       @runner = Thread.new do
         loop do
-          interval = (@interval / @folds.size) rescue @interval
+          interval = (@interval.to_f / @folds.size) rescue @interval
           @folds.each do |f, query|
             if combined = f[@index.query(Query.new(string: query))]
               @index << combined
