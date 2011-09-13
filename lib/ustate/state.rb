@@ -10,9 +10,9 @@ module UState
     optional :once, :bool, 6
     optional :metric_f, :float, 15
 
-    # Average a set of states together. Chooses the mean metric, the mode state,
-    # and the mean time. If init is provided, its values override (where present)
-    # the computed ones.
+    # Average a set of states together. Chooses the mean metric, the mode
+    # state, mode service, and the mean time. If init is provided, its values
+    # override (where present) the computed ones.
     def self.average(states, init = State.new)
       init = case init
              when State
@@ -30,10 +30,8 @@ module UState
       end
 
       # State
-      init.state ||= states.inject(Hash.new(0)) do |counts, s|
-        counts[s.state] += 1
-        counts
-      end.sort_by { |state, count| count }.last.first rescue nil
+      init.state ||= mode states.map(&:state)
+      init.service ||= mode states.map(&:service)
 
       # Time
       init.time ||= begin
@@ -47,9 +45,9 @@ module UState
       init
     end
 
-    # Sum a set of states together. Adds metrics, takes the mode state,
-    # and the mean time. If init is provided, its values override (where present)
-    # the computed ones.
+    # Sum a set of states together. Adds metrics, takes the mode state, mode
+    # service and the mean time. If init is provided, its values override
+    # (where present) the computed ones.
     def self.sum(states, init = State.new)
       init = case init
              when State
@@ -67,10 +65,8 @@ module UState
       end
 
       # State
-      init.state ||= states.inject(Hash.new(0)) do |counts, s|
-        counts[s.state] += 1
-        counts
-      end.sort_by { |state, count| count }.last.first rescue nil
+      init.state ||= mode states.map(&:state)
+      init.service ||= mode states.map(&:service)
 
       # Time
       init.time ||= begin
@@ -117,6 +113,13 @@ module UState
       init.time ||= Time.now.to_i
 
       init
+    end
+    
+    def self.mode(array)
+      array.inject(Hash.new(0)) do |counts, e|
+        counts[e] += 1
+        counts
+      end.sort_by { |e, count| count }.last.first rescue nil
     end
 
     # Partition a list of states by a field
