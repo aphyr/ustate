@@ -54,16 +54,45 @@ describe UState::Client do
     @client.query('service = "test"').states.first.state.should == 'ok'
   end
 
+  should 'send a state with a time' do
+    t = Time.now.to_i - 10
+    @client << {
+      state: 'ok',
+      service: 'test',
+      time: t
+    }
+    @client.query('service = "test"').states.first.time.should == t
+
+    @client << State.new(
+      state: 'ok',
+      service: 'test',
+      time: t
+    )
+    @client.query('service = "test"').states.first.time.should == t
+  end
+
+  should 'send a state without time' do
+    @client << {
+      state: 'ok',
+      service: 'test'
+    }
+    @client.query('service = "test"').states.first.time.should == Time.now.to_i
+
+    @client << State.new(
+      state: 'ok',
+      service: 'test'
+    )
+    @client.query('service = "test"').states.first.time.should == Time.now.to_i
+  end
+  
   should "query states" do
     @client << { state: 'critical', service: '1' }
     @client << { state: 'warning', service: '2' }
     @client << { state: 'critical', service: '3' }
     @client.query.states.
-      map(&:service).to_set.should == ['1', '2', '3'].to_set
+      map(&:service).to_set.should.superset ['1', '2', '3'].to_set
     @client.query('state = "critical"').states.
       map(&:service).to_set.should == ['1', '3'].to_set
-
-    @client.query.states.map(&:service).to_set.should == ['1','2','3'].to_set
   end
 
   should 'expire old states' do
@@ -115,7 +144,7 @@ describe UState::Client do
     rate = total / (t2 - t1)
     puts
     puts "#{rate} queries/sec"
-    rate.should > 500
+    rate.should > 100
   end
  
   should 'be threadsafe' do
@@ -147,7 +176,7 @@ describe UState::Client do
     rate = total / (t2 - t1)
     puts
     puts "#{rate} inserts/sec"
-    rate.should > 500
+    rate.should > 100
   end
 
   should 'survive inactivity' do

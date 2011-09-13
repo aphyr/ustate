@@ -23,9 +23,15 @@ class UState::Client
   # Send a state
   def <<(state_opts)
     # Create state
-    state = UState::State.new(state_opts)
-    state.time ||= Time.now.utc.to_i
-    state.host ||= Socket.gethostname
+    case state_opts
+    when UState::State
+      state = state_opts
+    else
+      unless state_opts.include? :host
+        state_opts[:host] = Socket.gethostname
+      end
+      state = UState::State.new(state_opts)
+    end
 
     message = UState::Message.new :states => [state]
 

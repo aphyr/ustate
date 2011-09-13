@@ -145,6 +145,12 @@ module UState
       end
     end
 
+    def initialize(*a)
+      super *a
+
+      @time ||= Time.now.to_i
+    end
+
     def metric
       @metric || metric_f
     end

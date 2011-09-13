@@ -10,7 +10,7 @@ require 'pp'
 class UState::Test
   attr_accessor :client, :hosts, :services, :states
   def initialize
-    @hosts = (0...10).map { |i| "host#{i}" }
+    @hosts = [nil] + (0...10).map { |i| "host#{i}" }
     @services = %w(cpu memory disk)
     @states = {}
     @client = UState::Client.new
