@@ -41,6 +41,7 @@ module UState
           a + state.time.to_f
         end / states.size).to_i
       rescue
+      end
       init.time ||= Time.now.to_i
 
       init
