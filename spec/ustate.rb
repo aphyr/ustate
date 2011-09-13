@@ -12,6 +12,8 @@ include UState
 
 # Start server
 server = Server.new
+server.index.insert_times_interval = 0.1
+server.index.insert_rate_interval = 0.1
 runner = Thread.new do
   Thread.abort_on_exception = true
   server.start
@@ -144,7 +146,7 @@ describe UState::Client do
 
     rate = total / (t2 - t1)
     puts
-    puts "#{rate} inserts/sec"    
+    puts "#{rate} inserts/sec"
     rate.should > 500
   end
 
@@ -190,5 +192,15 @@ describe UState::Client do
       state: 'warning',
       service: 'test',
     }).ok.should.be.true
+  end
+
+  should 'know own rate' do
+    sleep 0.1
+    @client << {service: 'test', state: 'ok'}
+    sleep 0.1
+    @client.query('service = "ustate insert rate"').states.first.metric.should > 0
+    @client.query('service = "ustate insert 50"').states.first.metric.should > 0
+    @client.query('service = "ustate insert 95"').states.first.metric.should > 0
+    @client.query('service = "ustate insert 99"').states.first.metric.should > 0
   end
 end

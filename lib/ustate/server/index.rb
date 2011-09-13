@@ -12,9 +12,15 @@ module UState
     BUFFER_SIZE = 10
     # Forget about states after
     EXPIRY = 1000
+
+    # Update metrics every
+    INSERT_RATE_INTERVAL = 5
+    INSERT_TIMES_INTERVAL = 5
     
     attr_reader :db, :queue
     attr_accessor :expiry
+    attr_accessor :insert_rate_interval
+    attr_accessor :insert_times_interval
 
     def initialize(opts = {})
       @db = Sequel.sqlite
@@ -28,6 +34,8 @@ module UState
 
       @expiry = opts[:expiry] || EXPIRY
 
+      @insert_rate_interval = opts[:insert_rate_interval] || INSERT_RATE_INTERVAL
+      @insert_times_interval = opts[:insert_times_interval] || INSERT_TIMES_INTERVAL
       setup_db
     end
 
@@ -36,7 +44,11 @@ module UState
     end
 
     def <<(s)
+      t0 = Time.now
       process s
+      dt = Time.now - t0
+      @insert_times << dt
+      @insert_rate << 1
     end
 
     def thread(s)
@@ -185,13 +197,48 @@ module UState
       stop!
       @pool = []
       @reaper = reaper
+
+      @insert_rate = MetricThread.new(Mtrc::Rate) do |r|
+        self << State.new(
+          service: "ustate insert rate",
+          state: "ok",
+          host: Socket.gethostname,
+          time: Time.now.to_i,
+          metric_f: r.rate.to_f,
+        )
+      end
+      @insert_rate.interval = @insert_rate_interval
+      
+      @insert_times = MetricThread.new(Mtrc::SortedSamples) do |r|
+        self << State.new(
+          service: "ustate insert 50",
+          state: "ok",
+          host: Socket.gethostname,
+          time: Time.now.to_i,
+          metric_f: r % 50,
+        )
+        self << State.new(
+          service: "ustate insert 95",
+          state: "ok",
+          host: Socket.gethostname,
+          time: Time.now.to_i,
+          metric_f: r % 95,
+        )
+        self << State.new(
+          service: "ustate insert 99",
+          state: "ok",
+          host: Socket.gethostname,
+          time: Time.now.to_i,
+          metric_f: r % 99,
+        )
+      end
+      @insert_times.interval = @insert_times_interval
     end
 
     # Finish up
     def stop
-      @pool.each do |thread|
-        thread.join
-      end
+      @insert_rate.stop rescue nil
+      @insert_times.stop rescue nil
     end
 
     def stop!

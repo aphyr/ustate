@@ -24,6 +24,7 @@ gemspec = Gem::Specification.new do |s|
 
   s.add_dependency 'beefcake', '>= 0.3.5' 
   s.add_dependency 'trollop', '>= 1.16.2'
+  s.add_dependency 'mtrc', '>= 0.0.4'
    
   s.files = FileList['{lib}/**/*', 'LICENSE', 'README.markdown'].to_a
   s.executables = []

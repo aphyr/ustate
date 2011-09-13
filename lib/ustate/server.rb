@@ -14,6 +14,8 @@ module UState
     require 'treetop'
     require 'ustate/query_string'
     require 'ustate/query/ast'
+    require 'ustate/metric_thread'
+    require 'mtrc'
 
     attr_accessor :backends
     attr_accessor :index
