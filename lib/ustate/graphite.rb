@@ -31,7 +31,7 @@ module UState
 
     def graph(q)
       if @query
-        @query = Query::Or(@query, Query.query(q))
+        @query = Query::Or.new(@query, Query.query(q))
       else
         @query = Query.query q
       end
