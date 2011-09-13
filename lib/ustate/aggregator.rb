@@ -47,8 +47,11 @@ module UState
         loop do
           interval = (@interval.to_f / @folds.size) rescue @interval
           @folds.each do |f, query|
-            if combined = f[@index.query(Query.new(string: query))]
-              @index << combined
+            matching = @index.query(Query.new(string: query))
+            unless matching.empty?
+              if combined = f[matching]
+                @index << combined
+              end
             end
             sleep interval
           end
