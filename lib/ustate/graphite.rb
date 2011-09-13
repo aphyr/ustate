@@ -36,14 +36,14 @@ module UState
     def forward(state)
       # Figure out what time to use.
       present = Time.now.to_i
-      if (present - state.time) >= INTERVAL
+      if (present - state.time) >= @interval
         time = present
       else
         time = state.time
       end
 
       # Construct message
-      string = "#{path(state)} #{state.metric} #{state.time}"
+      string = "#{path(state)} #{state.metric} #{time}"
       
       # Validate string
       if string["\n"]
