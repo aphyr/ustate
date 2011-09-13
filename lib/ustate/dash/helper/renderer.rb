@@ -143,8 +143,16 @@ module UState
         # list of hosts explicitly given.
         hosts = o[:hosts] || states.map do |state|
           state.host
-        end.compact
-        hosts = hosts.uniq.sort
+        end
+        hosts = hosts.uniq.sort { |a, b|
+          if !a
+            -1
+          elsif !b
+            1
+          else
+            a <=> b
+          end
+        }
 
         # Construct index
         by = states.inject({}) do |index, s|
