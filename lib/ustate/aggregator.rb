@@ -16,7 +16,7 @@ module UState
     end
 
     # Combines states matching query with State.average
-    def average(query, init)
+    def average(query, init = State.new)
       fold query do |states|
         State.average states, init
       end
@@ -57,7 +57,7 @@ module UState
     end
 
     # Combines states matching query with State.sum
-    def sum(query, init)
+    def sum(query, init = State.new)
       fold query do |states|
         State.sum states, init
       end
