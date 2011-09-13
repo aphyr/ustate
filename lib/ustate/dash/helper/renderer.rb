@@ -125,14 +125,16 @@ module UState
 
         # Compute maximum for each service
         maxima = if o[:global_maximum]
-          max = states.map(&:metric).max
+          max = states.map(&:metric).compact.max
           services.inject({}) do |m, s|
             m[s] = max
             m
           end.merge o[:maxima]
         else
           states.inject(Hash.new(0)) do |m, s|
-            m[s.service] = [s.metric, m[s.service]].max
+            if s.metric
+              m[s.service] = [s.metric, m[s.service]].max
+            end
             m
           end.merge o[:maxima]
         end
