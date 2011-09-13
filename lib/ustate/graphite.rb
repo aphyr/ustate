@@ -3,7 +3,7 @@ module UState
     # Forwards states to Graphite.
     HOST = '127.0.0.1'
     PORT = 2003
-    INTERVAL = 10
+    INTERVAL = 5
 
     attr_accessor :query
     attr_accessor :host
