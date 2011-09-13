@@ -3,6 +3,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'ustate'))
 require 'ustate/server'
 require 'ustate/client'
+require 'ustate/aggregator'
 require 'bacon'
 require 'set'
 
@@ -20,15 +21,15 @@ end
 # Let the server start listening
 sleep 0.2
 
-describe UState::Client do
+describe UState::Aggregator do
   before do
     @client = Client.new
     server.index.clear
     server.aggregator = nil
   end
-
+  
   should 'sum states' do
-    server.aggregator.sum 'service =~ "summand %"', State.new(service: 'sum')
+    server.aggregator.sum 'service =~ "summand %"', service: 'sum'
     @client << {
       service: 'summand 1',
       metric_f: 1.0,

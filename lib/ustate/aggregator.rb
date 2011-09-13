@@ -12,7 +12,7 @@ module UState
       @folds = {}
       @interval = opts[:interval] || INTERVAL
 
-      run
+      start
     end
 
     # Combines states matching query with State.average
@@ -42,8 +42,8 @@ module UState
 
     # Polls index for states matching each fold, applies fold, and inserts into
     # index.
-    def run
-      Thread.new do
+    def start
+      @runner = Thread.new do
         loop do
           interval = (@interval / @folds.size) rescue @interval
           @folds.each do |f, query|
