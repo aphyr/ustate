@@ -3,37 +3,33 @@ module UState
     # Forwards states to Graphite.
     HOST = '127.0.0.1'
     PORT = 2003
+    INTERVAL = 10
 
     attr_accessor :query
     attr_accessor :host
     attr_accessor :port
+    attr_accessor :interval
+
     def initialize(index, opts = {})
-      index.on_state &method(:receive)
+      @index = index
       @query = opts[:query]
       @host = opts[:host] || HOST
       @port = opts[:port] || PORT
+      @interval = opts[:interval] || INTERVAL
       @locket = Mutex.new
+
+      start
     end
 
     def connect
       @socket = TCPSocket.new(@host, @port)
     end
 
-    # Formats a state into a Graphite metric path.
-    def path(state)
-      if state.host
-        host = state.host.split('.').reverse.join('.')
-        "#{host}.#{state.service.gsub(' ', '.')}"
-      else
-        state.service.gsub(' ', '.')
-      end
-    end
-
     def graph(q)
       if @query
-        @query = Query::Or.new(@query, Query.query(q))
+        @query = "(#{@query}) or (#{q})"
       else
-        @query = Query.query q
+        @query = q
       end
     end
 
@@ -47,10 +43,23 @@ module UState
       end
     end
 
-    def receive(state)
-      Thread.new do
-        if @query === state
-          forward state
+    # Formats a state into a Graphite metric path.
+    def path(state)
+      if state.host
+        host = state.host.split('.').reverse.join('.')
+        "#{host}.#{state.service.gsub(' ', '.')}"
+      else
+        state.service.gsub(' ', '.')
+      end
+    end
+
+    def start
+      @runner = Thread.new do
+        loop do
+          @index.query(Query.new(string: @query)).each do |state|
+            forward state
+          end
+          sleep @interval
         end
       end
     end
