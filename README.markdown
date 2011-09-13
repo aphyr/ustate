@@ -83,6 +83,7 @@ Email
 -----
 
 config.rb:
+
     # Email comes from this address (required):
     emailer.from = 'ustate@your.net'
 
@@ -93,10 +94,56 @@ config.rb:
     emailer.tell 'you@gmail.com', 'state = "error" or state = "critical"'
     emailer.tell 'you@gmail.com', 'service =~ "mysql%"'
 
+Aggregating states
+---
+
+UState can fold together states matching some criteria to provide a more
+general overview of a complex system. Folds are executed in a separate thread
+and polled from the index every aggregator.interval seconds.
+
+config.rb:
+
+    # Add together the metrics for all feed mergers on any host.
+    # The resulting state has service name 'feed merger', but no host.
+    aggregator.sum 'service = "feed merger" and host != null', host: nil
+ 
+    # Average latencies
+    aggregator.average 'service = "api latency"'
+
+    # You can also pass any block to aggregator.fold. The block will be called
+    # with an array of states matching your query.
+    aggregator.fold 'service = "custom"' do |states|
+      UState::State.new(
+        service: 'some crazy result',
+        metric_f: states.map(&:metric_f).max
+      )
+    end
+
+Graphite
+---
+
+UState can forward metrics to Graphite. Just specify a query matching states
+you'd like to forward. Forwarding is performed in a separate thread, and polled from the index every graphite.interval seconds.
+
+config.rb:
+
+    graphite.host = 'foo'
+    graphite.port = 12345
+
+    # Submit states every 5 seconds
+    graphite.interval = 5
+    
+    # Send everything without a host
+    graphite.graph 'host = null'
+
+    # And also include the disk use on all nodes
+    graphite.graph 'service = "disk"'
+    
 Custom hooks
 ------------
 
 config.rb:
+
     # Log all states received to console.
     index.on_state do |s|
       p s
