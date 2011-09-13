@@ -37,11 +37,10 @@ module UState
 
       # Time
       init.time ||= begin
-        states.inject(0) do |a, state|
+        (states.inject(0) do |a, state|
           a + state.time.to_f
-        end / states.size
+        end / states.size).to_i
       rescue
-      end
       init.time ||= Time.now.to_i
 
       init
@@ -74,9 +73,9 @@ module UState
 
       # Time
       init.time ||= begin
-        states.inject(0) do |a, state|
+        (states.inject(0) do |a, state|
           a + state.time.to_f
-        end / states.size
+        end / states.size).to_i
       rescue 
       end
       init.time ||= Time.now.to_i
@@ -109,9 +108,9 @@ module UState
 
       # Time
       init.time ||= begin
-        states.inject(0) { |a, state|
+        (states.inject(0) { |a, state|
           a + state.time.to_f
-        } / states.size
+        } / states.size).to_i
       rescue
       end
       init.time ||= Time.now.to_i
