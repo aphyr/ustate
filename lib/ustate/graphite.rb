@@ -3,7 +3,7 @@ module UState
     # Forwards states to Graphite.
     HOST = '127.0.0.1'
     PORT = 2003
-    INTERVAL = 5
+    INTERVAL = 10
 
     attr_accessor :query
     attr_accessor :host
@@ -34,10 +34,22 @@ module UState
     end
 
     def forward(state)
+      # Figure out what time to use.
+      present = Time.now.to_i
+      if (present - state.time) >= INTERVAL
+        time = present
+      else
+        time = state.time
+      end
+
+      # Construct message
       string = "#{path(state)} #{state.metric} #{state.time}"
+      
+      # Validate string
       if string["\n"]
         raise ArgumentError, "#{string} has a newline"
       end
+
       with_connection do |s|
         s.puts string
       end
