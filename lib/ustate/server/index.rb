@@ -25,6 +25,7 @@ module UState
     def initialize(opts = {})
       @db = Sequel.sqlite
 
+      @server = opts[:server]
       @threads = opts[:threads] || THREADS
       @pool = []
 

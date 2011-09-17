@@ -15,6 +15,7 @@ module UState
       @query = opts[:query]
       @host = opts[:host] || HOST
       @port = opts[:port] || PORT
+      @server = opts[:server]
       @interval = opts[:interval] || INTERVAL
       @locket = Mutex.new
 
@@ -68,10 +69,15 @@ module UState
     def start
       @runner = Thread.new do
         loop do
-          @index.query(Query.new(string: @query)).each do |state|
-            forward state
+          begin
+            @index.query(Query.new(string: @query)).each do |state|
+              forward state
+            end
+            sleep @interval
+          rescue Exception => e
+            @server.log.warn e
+            sleep 1
           end
-          sleep @interval
         end
       end
     end

@@ -11,6 +11,7 @@ module UState
 
       @folds = {}
       @interval = opts[:interval] || INTERVAL
+      @server = opts[:server]
 
       start
     end
@@ -45,15 +46,20 @@ module UState
     def start
       @runner = Thread.new do
         loop do
-          interval = (@interval.to_f / @folds.size) rescue @interval
-          @folds.each do |f, query|
-            matching = @index.query(Query.new(string: query))
-            unless matching.empty?
-              if combined = f[matching]
-                @index << combined
+          begin
+            interval = (@interval.to_f / @folds.size) rescue @interval
+            @folds.each do |f, query|
+              matching = @index.query(Query.new(string: query))
+              unless matching.empty?
+                if combined = f[matching]
+                  @index << combined
+                end
               end
+              sleep interval
             end
-            sleep interval
+          rescue Exception => e
+            @server.log.error e
+            sleep 1
           end
         end
       end

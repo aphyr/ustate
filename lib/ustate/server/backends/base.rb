@@ -13,6 +13,7 @@ class UState::Server::Backends::Base
 
   def initialize(opts = {})
     @connections = []
+    @server = opts[:server]
     @timeout = opts[:timeout] || TIMEOUT
     @maximum_connections = opts[:maximum_connections] || MAXIMUM_CONNECTIONS
   end

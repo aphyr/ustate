@@ -23,6 +23,7 @@ module UState
       @from = opts[:from]
       @name = opts[:name]
       @host = opts[:host]
+      @server = opts[:server]
 
       @tell = {}
 
@@ -63,10 +64,14 @@ EOF
     # Dispatch emails to each address which is interested in this state
     def receive(*states)
       Thread.new do
-        @tell.each do |address, q|
-          if states.any? { |state| p  state; q === state }
-            email address, states.last
+        begin
+          @tell.each do |address, q|
+            if states.any? { |state| p  state; q === state }
+              email address, states.last
+            end
           end
+        rescue Exception => e
+          @server.log.error e
         end
       end
     end
