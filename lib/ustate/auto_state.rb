@@ -83,6 +83,15 @@ module UState
       @state.metric_f
     end
 
+    # Performs multiple updates, followed by flush.
+    # Example: merge state: critical, metric_f: 10235.3
+    def merge(opts)
+      opts.each do |k, v|
+        @state.send "#{k}=", v
+      end
+      flush
+    end
+
     # Issues an immediate update of the state with the :once option
     # set, but does not update the local state. Useful for transient errors.
     # Opts are merged with the state.
