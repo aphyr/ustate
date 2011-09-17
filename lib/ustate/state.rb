@@ -34,11 +34,10 @@ module UState
       init.service ||= mode states.map(&:service)
 
       # Time
-      init.time ||= begin
-        (states.inject(0) do |a, state|
-          a + state.time.to_f
-        end / states.size).to_i
-      rescue
+      init.time = begin 
+        times = states.map(&:time).compact
+        (times.inject(:+) / times.size).to_i
+      rescue 
       end
       init.time ||= Time.now.to_i
 
@@ -69,10 +68,9 @@ module UState
       init.service ||= mode states.map(&:service)
 
       # Time
-      init.time ||= begin
-        (states.inject(0) do |a, state|
-          a + state.time.to_f
-        end / states.size).to_i
+      init.time = begin 
+        times = states.map(&:time).compact
+        (times.inject(:+) / times.size).to_i
       rescue 
       end
       init.time ||= Time.now.to_i
@@ -104,11 +102,10 @@ module UState
       end
 
       # Time
-      init.time ||= begin
-        (states.inject(0) { |a, state|
-          a + state.time.to_f
-        } / states.size).to_i
-      rescue
+      init.time = begin 
+        times = states.map(&:time).compact
+        (times.inject(:+) / times.size).to_i
+      rescue 
       end
       init.time ||= Time.now.to_i
 
