@@ -187,6 +187,16 @@ Then:
     c.query.states # => [UState::State(state: 'ok', service: 'My service')]
     c.query('state != "ok"').states # => []
 
+Client state management
+-----------------------
+
+UState provides some classes to make managing state updates easier.
+
+UState::MetricThread starts a thread to poll a metric periodically, which can
+be used to flush an accumulated value to ustate at regular intervals.
+
+UState::AutoState bundles a state and a client together. Any changes to the AutoState automatically send the new state to the client.
+
 The Dashboard
 =============
 
