@@ -62,6 +62,7 @@ module UState
 
     # Send state to client
     def flush
+      @state.time = Time.now.to_i
       @client << @state
     end
 
@@ -100,6 +101,7 @@ module UState
       opts.each do |k, v|
         o.send "#{k}=", v
       end
+      o.time = Time.now.to_i
       o.once = true
       @client << o
     end
