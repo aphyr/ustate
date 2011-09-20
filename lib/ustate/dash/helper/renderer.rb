@@ -1,7 +1,7 @@
 module UState
   class Dash
     helpers do
-      include Rack::Utils
+      include ::Rack::Utils
 
       alias_method :h, :escape_html
 
