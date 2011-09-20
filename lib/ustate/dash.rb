@@ -100,6 +100,12 @@ module UState
       end
     end
 
+    # Add an additional public directory.
+    def self.public(dir)
+      require 'ustate/dash/rack/static'
+      use UState::Dash::Rack::Static, :root => dir
+    end
+
     def client
       self.class.client
     end
