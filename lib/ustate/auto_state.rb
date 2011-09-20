@@ -92,6 +92,7 @@ module UState
       end
       flush
     end
+    alias << merge
 
     # Issues an immediate update of the state with the :once option
     # set, but does not update the local state. Useful for transient errors.
