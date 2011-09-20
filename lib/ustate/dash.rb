@@ -103,7 +103,7 @@ module UState
     # Add an additional public directory.
     def self.public_dir(dir)
       require 'ustate/dash/rack/static'
-      use UState::Dash::Rack::Static, :root => dir
+      use UState::Dash::Static, :root => dir
     end
 
     def client

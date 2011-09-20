@@ -1,5 +1,4 @@
-module UState::Dash::Rack; end
-class UState::Dash::Rack::Static
+class UState::Dash::Static
   def initialize(app, options = {})
     @app = app
     @root = options[:root] or raise ArgumentError, "no root"
