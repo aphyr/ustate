@@ -248,6 +248,8 @@ For large installations, I plan to implement a selective forwarder. Local ustate
 Future directions
 =====
 
+Several people have mentioned wanting to query historical states; to replay the events in ustate over time. There are some difficulties here; notably that compressing hundreds of millions of states can make it a little tricky to query states over the entire dataset. If we restrict ourselves to specific time ranges, storing sequential states as protocol buffers compressed with snappy could work, especially if only *state* changes are written. Storing only state deltas might work as well.
+
 It'd be interesting to subscribe to states matching a query and receive states pushed to you as soon as they change.
 
 Should be easy to add a UDP acceptor for states as well. Have to figure out eventmachine with multiple backends.
