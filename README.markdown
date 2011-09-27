@@ -56,6 +56,8 @@ For the dashboard:
 
      gem install sinatra thin erubis sass
 
+We run UState from Upstart. An example job is in docs/upstart.conf.
+
 Demo
 ====
 
@@ -215,6 +217,9 @@ out states corresponding to any query: see lib/ustate/dash/helper/renderer.rb.
 The way I figure, you're almost certainly going to want to write your own, so
 I'm going to give you the tools you need, and get out of your way.
 
+An example config.rb, additional controllers, views, and public directory are
+all in doc/dash. Should give you ideas for extending the dashboard for your own needs.
+
 Protocol
 ========
 
@@ -240,11 +245,11 @@ On a macbook pro 8,3, I see >1300 queries/sec or >1200 inserts/sec. The client i
 
 For large installations, I plan to implement a selective forwarder. Local ustate servers can accept high volumes of states from a small set of nodes, and forward updates at a larger granularity to supervisors, and so forth, in a tree. The query language should be able to support proxying requests to the most recent source of a state, so very large sets of services can be maintained at high granularity.
 
-Goals
+Future directions
 =====
 
-In the medium term, I'll be connecting UState to Graphite (or perhaps another
-graphing tool) for metrics archival and soft-realtime graphs. I have an
-internal gnuplot system which is clunky and deserves retirement.
+It'd be interesting to subscribe to states matching a query and receive states pushed to you as soon as they change.
+
+Should be easy to add a UDP acceptor for states as well. Have to figure out eventmachine with multiple backends.
 
 When the protocol and architecture are finalized, I plan to reimplement the server in a faster language.
