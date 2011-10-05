@@ -164,7 +164,7 @@ module UState
 
     rule field
 #      [a-zA-Z] [a-zA-Z_0-9]*
-      ("state" / "host" / "service" / "description" / "metric_f") {
+      ("state" / "host" / "service" / "description" / "metric_f" / "time") {
         def sql
           text_value.to_sym
         end

@@ -1242,8 +1242,20 @@ module UState
                 r0 = r5
                 r0.extend(Field0)
               else
-                @index = i0
-                r0 = nil
+                if has_terminal?("time", false, index)
+                  r6 = instantiate_node(SyntaxNode,input, index...(index + 4))
+                  @index += 4
+                else
+                  terminal_parse_failure("time")
+                  r6 = nil
+                end
+                if r6
+                  r0 = r6
+                  r0.extend(Field0)
+                else
+                  @index = i0
+                  r0 = nil
+                end
               end
             end
           end
