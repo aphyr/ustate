@@ -63,6 +63,10 @@ describe UState::QueryString do
   s 'state = null', ds.filter(:state => nil)
   s 'state = "test"', ds.filter(:state => 'test')
   s 'state = 2', ds.filter(:state => 2)
+  s 'metric_f > 1', ds.filter { |s| s.metric_f > 1 }
+  s 'metric_f >= 1', ds.filter { |s| s.metric_f >= 1 }
+  s 'metric_f < 1', ds.filter { |s| s.metric_f < 1 }
+  s 'metric_f <= 1', ds.filter { |s| s.metric_f <= 1 }
   s 'state = -1.24', ds.filter(:state => -1.24)
   s 'state =~ "%foo%"', ds.filter(:state.like '%foo%')
   s 'state = 2 and host = "bar"', ds.filter(state: 2, host: "bar")
@@ -80,4 +84,8 @@ describe UState::QueryString do
   m 'metric_f = 2.0', [{metric_f: 2.0}], [{}, {metric_f: 3.0}]
   m 'state != "test"', [{}, {state: 'bad'}], [{state: 'test'}]
   m 'state =~ "a"', [{state: 'a'}], [{}, {state: ' a'}, {state: 'a '}]
+  m 'metric_f > 0', [{metric_f: 0.1}], [{}, {metric_f: 0}]
+  m 'metric_f >= 0', [{metric_f: 0.1}, {metric_f: 0}], [{}, {metric_f: -1}]
+  m 'metric_f < 0', [{metric_f: -0.1}], [{}, {metric_f: 0}]
+  m 'metric_f <= 0', [{metric_f: -0.1}, {metric_f: 0}], [{}, {metric_f: 1}]
 end

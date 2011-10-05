@@ -52,7 +52,7 @@ module UState
     end 
 
     rule predicate
-      equals / not_equals / approximately
+      less_equal / less / greater_equal / greater / equals / not_equals / approximately
     end
 
     rule approximately
@@ -66,7 +66,55 @@ module UState
         end
       }
     end   
+    
+    rule less_equal
+      field space? '<=' space? value {
+        def query
+          Query::LessEqual.new field.sql, value.sql
+        end
 
+        def sql
+          Sequel::SQL::BooleanExpression.new(:<=, field.sql, value.sql)
+        end
+      }
+    end
+
+    rule less
+      field space? '<' space? value {
+        def query
+          Query::Less.new field.sql, value.sql
+        end
+
+        def sql
+          Sequel::SQL::BooleanExpression.new(:<, field.sql, value.sql)
+        end
+      }
+    end
+    
+    rule greater_equal
+      field space? '>=' space? value {
+        def query
+          Query::GreaterEqual.new field.sql, value.sql
+        end
+
+        def sql
+          Sequel::SQL::BooleanExpression.new(:>=, field.sql, value.sql)
+        end
+      }
+    end
+
+    rule greater
+      field space? '>' space? value {
+        def query
+          Query::Greater.new field.sql, value.sql
+        end
+
+        def sql
+          Sequel::SQL::BooleanExpression.new(:>, field.sql, value.sql)
+        end
+      }
+    end
+    
     rule not_equals
       field space? '!=' space? value {
         def query

@@ -330,20 +330,40 @@ module UState
       end
 
       i0 = index
-      r1 = _nt_equals
+      r1 = _nt_less_equal
       if r1
         r0 = r1
       else
-        r2 = _nt_not_equals
+        r2 = _nt_less
         if r2
           r0 = r2
         else
-          r3 = _nt_approximately
+          r3 = _nt_greater_equal
           if r3
             r0 = r3
           else
-            @index = i0
-            r0 = nil
+            r4 = _nt_greater
+            if r4
+              r0 = r4
+            else
+              r5 = _nt_equals
+              if r5
+                r0 = r5
+              else
+                r6 = _nt_not_equals
+                if r6
+                  r0 = r6
+                else
+                  r7 = _nt_approximately
+                  if r7
+                    r0 = r7
+                  else
+                    @index = i0
+                    r0 = nil
+                  end
+                end
+              end
+            end
           end
         end
       end
@@ -429,6 +449,326 @@ module UState
       end
 
       node_cache[:approximately][start_index] = r0
+
+      r0
+    end
+
+    module LessEqual0
+      def field
+        elements[0]
+      end
+
+      def value
+        elements[4]
+      end
+    end
+
+    module LessEqual1
+      def query
+        Query::LessEqual.new field.sql, value.sql
+      end
+
+      def sql
+        Sequel::SQL::BooleanExpression.new(:<=, field.sql, value.sql)
+      end
+    end
+
+    def _nt_less_equal
+      start_index = index
+      if node_cache[:less_equal].has_key?(index)
+        cached = node_cache[:less_equal][index]
+        if cached
+          cached = SyntaxNode.new(input, index...(index + 1)) if cached == true
+          @index = cached.interval.end
+        end
+        return cached
+      end
+
+      i0, s0 = index, []
+      r1 = _nt_field
+      s0 << r1
+      if r1
+        r3 = _nt_space
+        if r3
+          r2 = r3
+        else
+          r2 = instantiate_node(SyntaxNode,input, index...index)
+        end
+        s0 << r2
+        if r2
+          if has_terminal?('<=', false, index)
+            r4 = instantiate_node(SyntaxNode,input, index...(index + 2))
+            @index += 2
+          else
+            terminal_parse_failure('<=')
+            r4 = nil
+          end
+          s0 << r4
+          if r4
+            r6 = _nt_space
+            if r6
+              r5 = r6
+            else
+              r5 = instantiate_node(SyntaxNode,input, index...index)
+            end
+            s0 << r5
+            if r5
+              r7 = _nt_value
+              s0 << r7
+            end
+          end
+        end
+      end
+      if s0.last
+        r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+        r0.extend(LessEqual0)
+        r0.extend(LessEqual1)
+      else
+        @index = i0
+        r0 = nil
+      end
+
+      node_cache[:less_equal][start_index] = r0
+
+      r0
+    end
+
+    module Less0
+      def field
+        elements[0]
+      end
+
+      def value
+        elements[4]
+      end
+    end
+
+    module Less1
+      def query
+        Query::Less.new field.sql, value.sql
+      end
+
+      def sql
+        Sequel::SQL::BooleanExpression.new(:<, field.sql, value.sql)
+      end
+    end
+
+    def _nt_less
+      start_index = index
+      if node_cache[:less].has_key?(index)
+        cached = node_cache[:less][index]
+        if cached
+          cached = SyntaxNode.new(input, index...(index + 1)) if cached == true
+          @index = cached.interval.end
+        end
+        return cached
+      end
+
+      i0, s0 = index, []
+      r1 = _nt_field
+      s0 << r1
+      if r1
+        r3 = _nt_space
+        if r3
+          r2 = r3
+        else
+          r2 = instantiate_node(SyntaxNode,input, index...index)
+        end
+        s0 << r2
+        if r2
+          if has_terminal?('<', false, index)
+            r4 = instantiate_node(SyntaxNode,input, index...(index + 1))
+            @index += 1
+          else
+            terminal_parse_failure('<')
+            r4 = nil
+          end
+          s0 << r4
+          if r4
+            r6 = _nt_space
+            if r6
+              r5 = r6
+            else
+              r5 = instantiate_node(SyntaxNode,input, index...index)
+            end
+            s0 << r5
+            if r5
+              r7 = _nt_value
+              s0 << r7
+            end
+          end
+        end
+      end
+      if s0.last
+        r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+        r0.extend(Less0)
+        r0.extend(Less1)
+      else
+        @index = i0
+        r0 = nil
+      end
+
+      node_cache[:less][start_index] = r0
+
+      r0
+    end
+
+    module GreaterEqual0
+      def field
+        elements[0]
+      end
+
+      def value
+        elements[4]
+      end
+    end
+
+    module GreaterEqual1
+      def query
+        Query::GreaterEqual.new field.sql, value.sql
+      end
+
+      def sql
+        Sequel::SQL::BooleanExpression.new(:>=, field.sql, value.sql)
+      end
+    end
+
+    def _nt_greater_equal
+      start_index = index
+      if node_cache[:greater_equal].has_key?(index)
+        cached = node_cache[:greater_equal][index]
+        if cached
+          cached = SyntaxNode.new(input, index...(index + 1)) if cached == true
+          @index = cached.interval.end
+        end
+        return cached
+      end
+
+      i0, s0 = index, []
+      r1 = _nt_field
+      s0 << r1
+      if r1
+        r3 = _nt_space
+        if r3
+          r2 = r3
+        else
+          r2 = instantiate_node(SyntaxNode,input, index...index)
+        end
+        s0 << r2
+        if r2
+          if has_terminal?('>=', false, index)
+            r4 = instantiate_node(SyntaxNode,input, index...(index + 2))
+            @index += 2
+          else
+            terminal_parse_failure('>=')
+            r4 = nil
+          end
+          s0 << r4
+          if r4
+            r6 = _nt_space
+            if r6
+              r5 = r6
+            else
+              r5 = instantiate_node(SyntaxNode,input, index...index)
+            end
+            s0 << r5
+            if r5
+              r7 = _nt_value
+              s0 << r7
+            end
+          end
+        end
+      end
+      if s0.last
+        r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+        r0.extend(GreaterEqual0)
+        r0.extend(GreaterEqual1)
+      else
+        @index = i0
+        r0 = nil
+      end
+
+      node_cache[:greater_equal][start_index] = r0
+
+      r0
+    end
+
+    module Greater0
+      def field
+        elements[0]
+      end
+
+      def value
+        elements[4]
+      end
+    end
+
+    module Greater1
+      def query
+        Query::Greater.new field.sql, value.sql
+      end
+
+      def sql
+        Sequel::SQL::BooleanExpression.new(:>, field.sql, value.sql)
+      end
+    end
+
+    def _nt_greater
+      start_index = index
+      if node_cache[:greater].has_key?(index)
+        cached = node_cache[:greater][index]
+        if cached
+          cached = SyntaxNode.new(input, index...(index + 1)) if cached == true
+          @index = cached.interval.end
+        end
+        return cached
+      end
+
+      i0, s0 = index, []
+      r1 = _nt_field
+      s0 << r1
+      if r1
+        r3 = _nt_space
+        if r3
+          r2 = r3
+        else
+          r2 = instantiate_node(SyntaxNode,input, index...index)
+        end
+        s0 << r2
+        if r2
+          if has_terminal?('>', false, index)
+            r4 = instantiate_node(SyntaxNode,input, index...(index + 1))
+            @index += 1
+          else
+            terminal_parse_failure('>')
+            r4 = nil
+          end
+          s0 << r4
+          if r4
+            r6 = _nt_space
+            if r6
+              r5 = r6
+            else
+              r5 = instantiate_node(SyntaxNode,input, index...index)
+            end
+            s0 << r5
+            if r5
+              r7 = _nt_value
+              s0 << r7
+            end
+          end
+        end
+      end
+      if s0.last
+        r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+        r0.extend(Greater0)
+        r0.extend(Greater1)
+      else
+        @index = i0
+        r0 = nil
+      end
+
+      node_cache[:greater][start_index] = r0
 
       r0
     end
