@@ -22,6 +22,17 @@ module UState
         State.average states, *a
       end
     end
+    
+    # Average states with the same service across varying hosts.
+    # Useful when you don't know the exact services you'd like to fold.
+    # The resulting host for each folded state will be nil.
+    def average_over_hosts(query)
+      fold query do |states|
+        State.partition(states, :service).values.map do |slice|
+          State.sum slice, {host: nil}
+        end
+      end
+    end
 
     # Combines states matching query with the given block. The block
     # receives an array of states which presently match.
@@ -51,8 +62,13 @@ module UState
             @folds.each do |f, query|
               matching = @index.query(Query.new(string: query))
               unless matching.empty?
-                if combined = f[matching]
+                case combined = f[matching]
+                when State
                   @index << combined
+                when Array
+                  combined.each do |s|
+                    @index << s
+                  end
                 end
               end
               sleep interval
@@ -69,6 +85,16 @@ module UState
     def sum(query, *a)
       fold query do |states|
         State.sum states, *a
+      end
+    end
+
+    # Sum states with the same service across varying hosts.
+    # Useful when you don't know the exact services you'd like to fold.
+    def sum_over_hosts(query)
+      fold query do |states|
+        State.partition(states, :service).values.map do |slice|
+          State.sum slice, {host: nil}
+        end
       end
     end
   end

@@ -77,4 +77,17 @@ describe UState::Aggregator do
     (1.3333333 - s.metric).should < 0.0001
     s.state.should == 'ok'
   end
+
+  should 'fold over hosts' do
+    server.aggregator.sum_over_hosts 'host =~ "m%"'
+
+    @client << { service: 'a', host: 'm1', metric_f: 1.0}
+    @client << { service: 'a', host: 'm2', metric_f: 1.0}
+    @client << { service: 'b', host: 'm1', metric_f: 1.0}
+    @client << { service: 'b', host: 'm2', metric_f: 1.0}
+
+    sleep(server.aggregator.interval * 2)
+
+    @client.query('service = "a" and host = null').states.first.metric_f.should == 2.0
+  end
 end
