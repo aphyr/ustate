@@ -72,6 +72,7 @@ describe UState::QueryString do
   s 'state = -1.24', ds.filter(:state => -1.24)
   s 'state =~ "%foo%"', ds.filter(:state.like '%foo%')
   s 'not state = "foo"', ds.filter(state: 'foo').invert
+  s 'not false', ds.filter(true)
   s 'state = 2 and host = "bar"', ds.filter(state: 2, host: "bar")
   s 'state = 2 and host != "bar" or service = "test"', ds.filter(state: 2).exclude(host: 'bar').or(service: 'test')
   s '(state = 1 or state = 2) and (state = 3 or state = 4)', 

@@ -262,7 +262,7 @@ module UState
         Query::Not.new p.query
       end
 
-      def sql
+      def sql 
         ~ p.sql
       end
     end
@@ -1117,7 +1117,10 @@ module UState
       def ruby_value
         true
       end
-      alias sql ruby_value
+
+      def sql
+        Sequel::TRUE
+      end
     end
 
     def _nt_true
@@ -1153,7 +1156,10 @@ module UState
       def ruby_value
         false
       end
-      alias sql ruby_value
+      
+      def sql
+        Sequel::FALSE
+      end
     end
 
     def _nt_false
