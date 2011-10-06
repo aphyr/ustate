@@ -81,6 +81,29 @@ The server loads a file in the working directory named config.rb. Override with
 --config-file.  Its contents are instance-evaled in the context of the current
 server. You can use this to extend ustate with additional behavior.
 
+Expiring States
+---------------
+
+The reaper periodically kills states matching queries which are too old. It
+will ensure that any state matching a query will be present for *at least* that
+many seconds. For instance:
+
+    # States expire after 10 seconds
+    reaper.default = 10
+
+    # Except for daily stats, which last 2 days
+    reaper.reap 'service =~ "%daily%"', 2 * 24 * 3600
+
+    # We need to know RIGHT AWAY if the fridge fails to check in.
+    reaper.reap 'host = "fridge"', 1
+
+In this configuration, daily updates from host fridge will stay around for 2
+days, everything not on the fridge expires after 10 seconds, and other fridge
+updates are kept for only one second.
+
+Note that the reaper does some query recomposition which can lead to
+inefficient patterns. Writing an optimizer is on my list.
+
 Email
 -----
 
@@ -140,7 +163,7 @@ config.rb:
 
     # And also include the disk use on all nodes
     graphite.graph 'service = "disk"'
-    
+ 
 Custom hooks
 ------------
 
@@ -234,7 +257,16 @@ success boolean in the Message.
 You can also query states using a very basic expression language. The grammar is specified as a Parsable Expression Grammar in query_string.treetop. Examples include:
 
     state = "ok"
+    
     (service =~ "disk%") or (state == "critical" and host =~ "%.trioptimum.com")
+
+    metric_f > 2.0 and not host = "tau ceti 5"
+    
+    # All states
+    true
+
+    # No states
+    false
 
 Search queries will return a message with repeated States matching that expression. An null expression will return no states.
 
