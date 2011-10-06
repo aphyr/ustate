@@ -95,40 +95,6 @@ describe UState::Client do
       map(&:service).to_set.should == ['1', '3'].to_set
   end
 
-  should 'expire old states' do
-    old_expiry = server.index.expiry
-
-    begin
-      server.index.expiry = 0
-
-      expired = false
-      server.index.on_state_change do |old, new|
-        if old.service == 'expiring' and
-           old.state == 'ok' and
-           old.metric_f == 1.0 and
-           new.service == 'expiring' and
-           new.state == 'unknown' and 
-           new.description =~ /has not heard from this service since/ and
-           new.metric_f == nil
-       
-          expired = true
-        end
-      end
-
-      @client << {
-        service: 'expiring',
-        metric_f: 1.0,
-        state: 'ok'
-      }
-      
-      sleep 2
-      expired.should.be.true
-      server.index.query(Query.new(string: 'service == "expiring"')).should.be.empty?
-    ensure
-      server.index.expiry = old_expiry
-    end
-  end
-
   should 'query quickly' do
     t1 = Time.now
     total = 1000
