@@ -1,5 +1,5 @@
 class UState::Query
-  class Approximately
+  class Approximately < Node
     def initialize(field, value)
       @field = field
       @value = case value
@@ -19,6 +19,10 @@ class UState::Query
 
     def ===(state)
       @value === state.send(@field) 
+    end
+
+    def inspect
+      inspect_helper @field, @value
     end
   end
 end

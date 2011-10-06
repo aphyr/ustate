@@ -1,3 +1,4 @@
+require 'ustate/query/node'
 require 'ustate/query/and'
 require 'ustate/query/approximately'
 require 'ustate/query/equals'

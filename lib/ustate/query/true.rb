@@ -1,5 +1,5 @@
 class UState::Query
-  class True
+  class True < Node
     def initialize
     end
 

@@ -1,5 +1,5 @@
 class UState::Query
-  class NotEquals
+  class NotEquals < Node
     def initialize(field, value)
       @field = field
       @value = value
@@ -7,6 +7,10 @@ class UState::Query
 
     def ===(state)
       state.send(@field) != @value
+    end
+
+    def inspect
+      inspect_helper @field, @value
     end
   end
 end

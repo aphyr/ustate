@@ -1,5 +1,5 @@
 class UState::Query
-  class Or
+  class Or < Node
     def initialize(a,b)
       @a = a
       @b = b
@@ -7,6 +7,10 @@ class UState::Query
 
     def ===(state)
       @a === state or @b === state
+    end
+
+    def inspect
+      inspect_helper @a, @b
     end
   end
 end

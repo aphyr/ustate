@@ -1,5 +1,5 @@
 class UState::Query
-  class Less
+  class Less < Node
     def initialize(field, value)
       @field = field
       @value = value
@@ -7,6 +7,10 @@ class UState::Query
     
     def ===(state)
       x = state.send(@field) and x < @value
+    end
+
+    def inspect
+      inspect_helper @field, @value
     end
   end
 end

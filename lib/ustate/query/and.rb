@@ -1,5 +1,5 @@
 class UState::Query
-  class And
+  class And < Node
     def initialize(a,b)
       @a = a
       @b = b
@@ -7,6 +7,10 @@ class UState::Query
 
     def ===(state)
       @a === state and @b === state
+    end
+
+    def inspect
+      inspect_helper @a, @b
     end
   end
 end
