@@ -15,11 +15,13 @@ module UState
     require 'ustate/query_string'
     require 'ustate/query/ast'
     require 'ustate/metric_thread'
+    require 'ustate/reaper'
     require 'logger'
     require 'mtrc'
 
     attr_accessor :backends
     attr_accessor :index
+    attr_accessor :reaper
     attr_writer :aggregator
     attr_writer :emailer
     attr_writer :graphite
@@ -34,6 +36,8 @@ module UState
       @backends << b
 
       @index = Index.new :server => self
+
+      @reaper = UState::Reaper.new(@index, server: self)
 
       @log = Logger.new('ustate.log', 4, 134217728)
       @log.level = Logger::INFO  
