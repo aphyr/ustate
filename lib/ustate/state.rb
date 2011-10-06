@@ -122,8 +122,14 @@ module UState
     # Partition a list of states by a field
     # Returns a hash of field_value => state
     def self.partition(states, field)
-      states.inject(Hash.new { [] }) do |p, state|
-        p[state.send(field)] << state
+      states.inject({}) do |p, state|
+        k = state.send field
+        if p.include? k
+          p[k] << state
+        else
+          p[k] = [state]
+        end
+        p
       end
     end
 
