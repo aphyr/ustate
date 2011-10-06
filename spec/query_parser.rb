@@ -69,6 +69,7 @@ describe UState::QueryString do
   s 'metric_f <= 1', ds.filter { |s| s.metric_f <= 1 }
   s 'state = -1.24', ds.filter(:state => -1.24)
   s 'state =~ "%foo%"', ds.filter(:state.like '%foo%')
+  s 'not state = "foo"', ds.filter(state: 'foo').invert
   s 'state = 2 and host = "bar"', ds.filter(state: 2, host: "bar")
   s 'state = 2 and host != "bar" or service = "test"', ds.filter(state: 2).exclude(host: 'bar').or(service: 'test')
   s '(state = 1 or state = 2) and (state = 3 or state = 4)', 
@@ -88,4 +89,5 @@ describe UState::QueryString do
   m 'metric_f >= 0', [{metric_f: 0.1}, {metric_f: 0}], [{}, {metric_f: -1}]
   m 'metric_f < 0', [{metric_f: -0.1}], [{}, {metric_f: 0}]
   m 'metric_f <= 0', [{metric_f: -0.1}, {metric_f: 0}], [{}, {metric_f: 1}]
+  m 'not host = "foo"', [{}, {host: 'bar'}], [{host: "foo"}] 
 end

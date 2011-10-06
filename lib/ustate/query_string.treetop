@@ -2,7 +2,7 @@ module UState
   grammar QueryString
     # (state =~ "foo" or state == "bar") and service == "foo"
     # Binding order proceeds from loosest to tightest.
-    
+
     rule or
       first:and rest:(space 'or' space and)* {
         def query
@@ -21,18 +21,30 @@ module UState
     end
 
     rule and
-      first:primary rest:(space 'and' space primary)* {
+      first:(not / primary) rest:(space 'and' space p:(not / primary))* {
         def query
-          rest.elements.map { |x| x.primary }.inject(first.query) do |a, sub|
+          rest.elements.map { |x| x.p }.inject(first.query) do |a, sub|
             Query::And.new a, sub.query
           end
         end
 
         def sql
-          rest.elements.map { |x| x.primary }.
+          rest.elements.map { |x| x.p }.
             inject(first.sql) do |a, sub|
               a & sub.sql
             end
+        end
+      }
+    end
+
+    rule not
+      'not' space primary {
+        def query
+          Query::Not.new primary.query
+        end
+
+        def sql
+          ~ primary.sql
         end
       }
     end

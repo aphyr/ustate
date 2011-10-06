@@ -125,7 +125,7 @@ module UState
         elements[2]
       end
 
-      def primary
+      def p
         elements[3]
       end
     end
@@ -142,13 +142,13 @@ module UState
 
     module And2
       def query
-        rest.elements.map { |x| x.primary }.inject(first.query) do |a, sub|
+        rest.elements.map { |x| x.p }.inject(first.query) do |a, sub|
           Query::And.new a, sub.query
         end
       end
 
       def sql
-        rest.elements.map { |x| x.primary }.
+        rest.elements.map { |x| x.p }.
           inject(first.sql) do |a, sub|
             a & sub.sql
           end
@@ -167,47 +167,71 @@ module UState
       end
 
       i0, s0 = index, []
-      r1 = _nt_primary
+      i1 = index
+      r2 = _nt_not
+      if r2
+        r1 = r2
+      else
+        r3 = _nt_primary
+        if r3
+          r1 = r3
+        else
+          @index = i1
+          r1 = nil
+        end
+      end
       s0 << r1
       if r1
-        s2, i2 = [], index
+        s4, i4 = [], index
         loop do
-          i3, s3 = index, []
-          r4 = _nt_space
-          s3 << r4
-          if r4
+          i5, s5 = index, []
+          r6 = _nt_space
+          s5 << r6
+          if r6
             if has_terminal?('and', false, index)
-              r5 = instantiate_node(SyntaxNode,input, index...(index + 3))
+              r7 = instantiate_node(SyntaxNode,input, index...(index + 3))
               @index += 3
             else
               terminal_parse_failure('and')
-              r5 = nil
+              r7 = nil
             end
-            s3 << r5
-            if r5
-              r6 = _nt_space
-              s3 << r6
-              if r6
-                r7 = _nt_primary
-                s3 << r7
+            s5 << r7
+            if r7
+              r8 = _nt_space
+              s5 << r8
+              if r8
+                i9 = index
+                r10 = _nt_not
+                if r10
+                  r9 = r10
+                else
+                  r11 = _nt_primary
+                  if r11
+                    r9 = r11
+                  else
+                    @index = i9
+                    r9 = nil
+                  end
+                end
+                s5 << r9
               end
             end
           end
-          if s3.last
-            r3 = instantiate_node(SyntaxNode,input, i3...index, s3)
-            r3.extend(And0)
+          if s5.last
+            r5 = instantiate_node(SyntaxNode,input, i5...index, s5)
+            r5.extend(And0)
           else
-            @index = i3
-            r3 = nil
+            @index = i5
+            r5 = nil
           end
-          if r3
-            s2 << r3
+          if r5
+            s4 << r5
           else
             break
           end
         end
-        r2 = instantiate_node(SyntaxNode,input, i2...index, s2)
-        s0 << r2
+        r4 = instantiate_node(SyntaxNode,input, i4...index, s4)
+        s0 << r4
       end
       if s0.last
         r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
@@ -219,6 +243,68 @@ module UState
       end
 
       node_cache[:and][start_index] = r0
+
+      r0
+    end
+
+    module Not0
+      def space
+        elements[1]
+      end
+
+      def primary
+        elements[2]
+      end
+    end
+
+    module Not1
+      def query
+        Query::Not.new primary.query
+      end
+
+      def sql
+        ~ primary.sql
+      end
+    end
+
+    def _nt_not
+      start_index = index
+      if node_cache[:not].has_key?(index)
+        cached = node_cache[:not][index]
+        if cached
+          cached = SyntaxNode.new(input, index...(index + 1)) if cached == true
+          @index = cached.interval.end
+        end
+        return cached
+      end
+
+      i0, s0 = index, []
+      if has_terminal?('not', false, index)
+        r1 = instantiate_node(SyntaxNode,input, index...(index + 3))
+        @index += 3
+      else
+        terminal_parse_failure('not')
+        r1 = nil
+      end
+      s0 << r1
+      if r1
+        r2 = _nt_space
+        s0 << r2
+        if r2
+          r3 = _nt_primary
+          s0 << r3
+        end
+      end
+      if s0.last
+        r0 = instantiate_node(SyntaxNode,input, i0...index, s0)
+        r0.extend(Not0)
+        r0.extend(Not1)
+      else
+        @index = i0
+        r0 = nil
+      end
+
+      node_cache[:not][start_index] = r0
 
       r0
     end
