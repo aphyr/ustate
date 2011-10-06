@@ -38,13 +38,13 @@ module UState
     end
 
     rule not
-      'not' space primary {
+      'not' space p:(not / primary) {
         def query
-          Query::Not.new primary.query
+          Query::Not.new p.query
         end
 
         def sql
-          ~ primary.sql
+          ~ p.sql
         end
       }
     end
@@ -64,7 +64,7 @@ module UState
     end 
 
     rule predicate
-      less_equal / less / greater_equal / greater / equals / not_equals / approximately
+      true / false / less_equal / less / greater_equal / greater / equals / not_equals / approximately
     end
 
     rule approximately
@@ -152,9 +152,35 @@ module UState
     end
 
     rule value
-      double_quoted_string / float / integer / null
+      true / false / double_quoted_string / float / integer / null
     end
 
+    rule true
+      'true' {
+        def query
+          Query::True.new
+        end
+          
+        def ruby_value
+          true
+        end
+        alias sql ruby_value
+      }
+    end
+    
+    rule false
+      'false' {
+        def query
+          Query::False.new
+        end
+          
+        def ruby_value
+          false
+        end
+        alias sql ruby_value
+      }
+    end
+        
     rule integer
       '-'? [0-9]+ {
         def ruby_value

@@ -252,18 +252,18 @@ module UState
         elements[1]
       end
 
-      def primary
+      def p
         elements[2]
       end
     end
 
     module Not1
       def query
-        Query::Not.new primary.query
+        Query::Not.new p.query
       end
 
       def sql
-        ~ primary.sql
+        ~ p.sql
       end
     end
 
@@ -291,7 +291,19 @@ module UState
         r2 = _nt_space
         s0 << r2
         if r2
-          r3 = _nt_primary
+          i3 = index
+          r4 = _nt_not
+          if r4
+            r3 = r4
+          else
+            r5 = _nt_primary
+            if r5
+              r3 = r5
+            else
+              @index = i3
+              r3 = nil
+            end
+          end
           s0 << r3
         end
       end
@@ -416,36 +428,46 @@ module UState
       end
 
       i0 = index
-      r1 = _nt_less_equal
+      r1 = _nt_true
       if r1
         r0 = r1
       else
-        r2 = _nt_less
+        r2 = _nt_false
         if r2
           r0 = r2
         else
-          r3 = _nt_greater_equal
+          r3 = _nt_less_equal
           if r3
             r0 = r3
           else
-            r4 = _nt_greater
+            r4 = _nt_less
             if r4
               r0 = r4
             else
-              r5 = _nt_equals
+              r5 = _nt_greater_equal
               if r5
                 r0 = r5
               else
-                r6 = _nt_not_equals
+                r6 = _nt_greater
                 if r6
                   r0 = r6
                 else
-                  r7 = _nt_approximately
+                  r7 = _nt_equals
                   if r7
                     r0 = r7
                   else
-                    @index = i0
-                    r0 = nil
+                    r8 = _nt_not_equals
+                    if r8
+                      r0 = r8
+                    else
+                      r9 = _nt_approximately
+                      if r9
+                        r0 = r9
+                      else
+                        @index = i0
+                        r0 = nil
+                      end
+                    end
                   end
                 end
               end
@@ -1049,30 +1071,112 @@ module UState
       end
 
       i0 = index
-      r1 = _nt_double_quoted_string
+      r1 = _nt_true
       if r1
         r0 = r1
       else
-        r2 = _nt_float
+        r2 = _nt_false
         if r2
           r0 = r2
         else
-          r3 = _nt_integer
+          r3 = _nt_double_quoted_string
           if r3
             r0 = r3
           else
-            r4 = _nt_null
+            r4 = _nt_float
             if r4
               r0 = r4
             else
-              @index = i0
-              r0 = nil
+              r5 = _nt_integer
+              if r5
+                r0 = r5
+              else
+                r6 = _nt_null
+                if r6
+                  r0 = r6
+                else
+                  @index = i0
+                  r0 = nil
+                end
+              end
             end
           end
         end
       end
 
       node_cache[:value][start_index] = r0
+
+      r0
+    end
+
+    module True0
+      def query
+        Query::True.new
+      end
+        
+      def ruby_value
+        true
+      end
+      alias sql ruby_value
+    end
+
+    def _nt_true
+      start_index = index
+      if node_cache[:true].has_key?(index)
+        cached = node_cache[:true][index]
+        if cached
+          cached = SyntaxNode.new(input, index...(index + 1)) if cached == true
+          @index = cached.interval.end
+        end
+        return cached
+      end
+
+      if has_terminal?('true', false, index)
+        r0 = instantiate_node(SyntaxNode,input, index...(index + 4))
+        r0.extend(True0)
+        @index += 4
+      else
+        terminal_parse_failure('true')
+        r0 = nil
+      end
+
+      node_cache[:true][start_index] = r0
+
+      r0
+    end
+
+    module False0
+      def query
+        Query::False.new
+      end
+        
+      def ruby_value
+        false
+      end
+      alias sql ruby_value
+    end
+
+    def _nt_false
+      start_index = index
+      if node_cache[:false].has_key?(index)
+        cached = node_cache[:false][index]
+        if cached
+          cached = SyntaxNode.new(input, index...(index + 1)) if cached == true
+          @index = cached.interval.end
+        end
+        return cached
+      end
+
+      if has_terminal?('false', false, index)
+        r0 = instantiate_node(SyntaxNode,input, index...(index + 5))
+        r0.extend(False0)
+        @index += 5
+      else
+        terminal_parse_failure('false')
+        r0 = nil
+      end
+
+      node_cache[:false][start_index] = r0
 
       r0
     end

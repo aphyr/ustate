@@ -59,6 +59,8 @@ describe UState::QueryString do
   t 'state = 2 and state = 3 or state = 3 and state = 2 or state = 4 and state = 2 or state = 5'
   t '(state = 2 or state = 3) and (state = 3 or (state = 3))'
 
+  s 'true', ds.filter(true)
+  s 'false', ds.filter(false)
   s 'state = nil', ds.filter(:state => nil)
   s 'state = null', ds.filter(:state => nil)
   s 'state = "test"', ds.filter(:state => 'test')
@@ -80,6 +82,10 @@ describe UState::QueryString do
     "SELECT * FROM `states` WHERE ((((`state` = 1) OR (`state` = 2)) AND (`state` = 3)) OR (`state` = 4))"
 
   # Test AST matching
+  m 'true', [{state: 'test'}, {}], []
+  m 'false', [], [{state: 'test'}, {}]
+  m 'true or false', [{state: 'test'}, {}], []
+  m 'true and not not false', [], [{state: 'test'}, {}]
   m 'state = "test"', [{state: 'test'}], [{}, {state: 'bad'}]
   m 'metric_f = 2', [{metric_f: 2.0}], [{}, {metric_f: 3.0}]
   m 'metric_f = 2.0', [{metric_f: 2.0}], [{}, {metric_f: 3.0}]
