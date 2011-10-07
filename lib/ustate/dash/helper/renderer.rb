@@ -80,6 +80,7 @@ module UState
         rescue ZeroDivisionError
           0
         end
+        size = "%.2f" % size
 
         tag opts[:tag], h(text), 
           :class => "state #{s.state}", 
