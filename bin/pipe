@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+
+# Parses text and pipes it to ustate.
+#
+#
+
+require 'trollop'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'ustate'))
+require 'ustate/client'
+require 'ustate/auto_state'
+
+class UState::Pipe
+  def initialize(opts)
+    @host = opts[:host]
+    @port = opts[:port]
+    @interval = opts[:interval]
+    @command = opts[:command]
+    
+    @client = UState::Client.new(:host => @host, :port => @port)
+    @state = UState::AutoState.new(@client,
+      service: opts[:"state-service"],
+      state: opts[:"state-state"],
+      host: opts[:"state-host"]
+    )
+  end
+
+  def metric
+    `#{@command}`.chomp.to_f
+  end
+
+  def tick
+    begin
+      m = metric
+      puts "#{Time.now} #{m}"
+      @state.metric_f = m
+    rescue => e
+      $stderr.puts "#{e.class} #{e}\n#{e.backtrace.join "\n"}"
+      sleep 10
+    end
+  end
+
+  def run
+    loop do
+      tick
+      sleep @interval
+    end
+  end
+end
+  
+UState::Pipe.new(Trollop.options do
+  opt :host, "Host", :default => '127.0.0.1'
+  opt :port, "Port", :default => 55956
+  opt :interval, "Run command periodically", :default => 5
+  opt :command, "Run the given command and use its output as the metric.", type: :string
+  opt :"state-service", "Service", type: :string
+  opt :"state-state", "State", default: "ok"
+  opt :"state-host", "Host", default: Socket.gethostname
+end).run
