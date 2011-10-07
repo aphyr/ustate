@@ -42,6 +42,11 @@ class UState::Client
     end
   end
 
+  # Returns an array of states matching query.
+  def [](query)
+    query(query).states || []
+  end
+
   def connect
     @socket = TCPSocket.new(@host, @port)
   end

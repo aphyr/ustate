@@ -95,6 +95,12 @@ describe UState::Client do
       map(&:service).to_set.should == ['1', '3'].to_set
   end
 
+  it '[]' do
+    @client['state = "critical"'].should == []
+    @client << {state: 'critical'}
+    @client['state = "critical"'].first.state.should == 'critical'
+  end
+
   should 'query quickly' do
     t1 = Time.now
     total = 1000
