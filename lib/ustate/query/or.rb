@@ -1,16 +1,11 @@
 class UState::Query
   class Or < Node
-    def initialize(a,b)
-      @a = a
-      @b = b
-    end
-
+    include Narity
+    
     def ===(state)
-      @a === state or @b === state
-    end
-
-    def inspect
-      inspect_helper @a, @b
+      @as.any? do |a|
+        a === state
+      end
     end
   end
 end

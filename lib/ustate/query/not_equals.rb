@@ -1,16 +1,9 @@
 class UState::Query
   class NotEquals < Node
-    def initialize(field, value)
-      @field = field
-      @value = value
-    end
+    include Binarity
 
     def ===(state)
-      state.send(@field) != @value
-    end
-
-    def inspect
-      inspect_helper @field, @value
+      state.send(@a) != @b
     end
   end
 end

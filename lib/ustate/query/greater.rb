@@ -1,16 +1,9 @@
 class UState::Query
   class Greater < Node
-    def initialize(field, value)
-      @field = field
-      @value = value
-    end
+    include Binarity
     
     def ===(state)
-      x = state.send(@field) and x > @value
-    end
-
-    def inspect
-      inspect_helper @field, @value
+      x = state.send(@a) and x > @b
     end
   end
 end

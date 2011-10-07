@@ -1,4 +1,7 @@
 require 'ustate/query/node'
+require 'ustate/query/binarity'
+require 'ustate/query/narity'
+
 require 'ustate/query/and'
 require 'ustate/query/approximately'
 require 'ustate/query/equals'

@@ -1,16 +1,9 @@
 class UState::Query
   class LessEqual < Node
-    def initialize(field, value)
-      @field = field
-      @value = value
-    end
-    
-    def ===(state)
-      x = state.send(@field) and x <= @value
-    end
+    include Binarity
 
-    def inspect
-      inspect_helper @field, @value
+    def ===(state)
+      x = state.send(@a) and x <= @b
     end
   end
 end

@@ -1,8 +1,10 @@
 class UState::Query
   class Approximately < Node
+    include Binarity
+    
     def initialize(field, value)
-      @field = field
-      @value = case value
+      @a = field
+      @b = case value
         when String
           r = value.chars.inject('') do |r, c|
             if c == '%'
@@ -18,11 +20,7 @@ class UState::Query
     end
 
     def ===(state)
-      @value === state.send(@field) 
-    end
-
-    def inspect
-      inspect_helper @field, @value
+      @b === state.send(@a) 
     end
   end
 end

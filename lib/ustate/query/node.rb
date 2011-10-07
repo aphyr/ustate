@@ -1,4 +1,6 @@
 class UState::Query
+  require 'set'
+
   class Node
     def indent(s, d = 1)
       ("  " * d) + s.gsub("\n", "\n" + ("  " * d))
@@ -10,6 +12,10 @@ class UState::Query
 
     def inspect
       inspect_helper
+    end
+    
+    def mass
+      1
     end
   end
 end
