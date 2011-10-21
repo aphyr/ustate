@@ -1,0 +1,22 @@
+package ustate;
+
+message Message {
+  optional bool ok = 2;
+  optional string error = 3;
+  repeated State states = 4;
+  optional Query query = 5;
+
+  messsage State {
+    optional int64 time = 1;
+    optional string state = 2;
+    optional string service = 3;
+    optional string host = 4;
+    optional string description = 5;
+    optional bool once = 6;
+    optional float metric_f = 15;
+  }
+
+  message Query {
+    optional string string = 1;
+  }
+}
