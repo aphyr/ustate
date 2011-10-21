@@ -148,7 +148,8 @@ Graphite
 ---
 
 UState can forward metrics to Graphite. Just specify a query matching states
-you'd like to forward. Forwarding is performed in a separate thread, and polled from the index every graphite.interval seconds.
+you'd like to forward. Forwarding is performed in a separate thread, and polled
+from the index every graphite.interval seconds.
 
 config.rb:
 
@@ -220,7 +221,8 @@ UState provides some classes to make managing state updates easier.
 UState::MetricThread starts a thread to poll a metric periodically, which can
 be used to flush an accumulated value to ustate at regular intervals.
 
-UState::AutoState bundles a state and a client together. Any changes to the AutoState automatically send the new state to the client.
+UState::AutoState bundles a state and a client together. Any changes to the
+AutoState automatically send the new state to the client.
 
 The Dashboard
 =============
@@ -247,14 +249,19 @@ Protocol
 ========
 
 A connection to UState is a stream of messages. Each message is a 4 byte
-network-endian integer *length*, followed by a Procol Buffers Message of
-*length* bytes. See lib/ustate/message.rb for the protobuf particulars.
+network-endian integer *length*, followed by a Procol Buffer Message of
+*length* bytes. See proto/message.proto for the protobuf particulars.
 
 The server will accept a repeated list of States, and respond with a
-confirmation message with either an acknowledgement or an error. Check the
-success boolean in the Message.
+confirmation message with either an acknowledgement or an error. Check the `ok`
+boolean in the message; if false, message.error will be a descriptive string.
 
-You can also query states using a very basic expression language. The grammar is specified as a Parsable Expression Grammar in query_string.treetop. Examples include:
+States are uniquely identified by host and service. Both allow null. State.time
+is the time in unix epoch seconds and is required. 
+
+You can also query states using a very basic expression language. The grammar
+is specified as a Parsable Expression Grammar in query_string.treetop. Examples
+include:
 
     state = "ok"
     
@@ -268,22 +275,44 @@ You can also query states using a very basic expression language. The grammar is
     # No states
     false
 
-Search queries will return a message with repeated States matching that expression. An null expression will return no states.
+Just submit a Message with your query in Message.query.string. Search queries
+will return a message with repeated States matching that expression. An null
+expression will return no states.
 
 Performance
 ===========
 
-On a macbook pro 8,3, I see >1300 queries/sec or >1200 inserts/sec. The client is fully threadsafe, and performs well concurrently. I will continue to tune UState for latency and throughput, and welcome patches.
+On a macbook pro 8,3, I see >1300 queries/sec or >1200 inserts/sec. The client
+is fully threadsafe, and performs well concurrently. I will continue to tune
+UState for latency and throughput, and welcome patches.
 
-For large installations, I plan to implement a selective forwarder. Local ustate servers can accept high volumes of states from a small set of nodes, and forward updates at a larger granularity to supervisors, and so forth, in a tree. The query language should be able to support proxying requests to the most recent source of a state, so very large sets of services can be maintained at high granularity.
+For large installations, I plan to implement a selective forwarder. Local
+ustate servers can accept high volumes of states from a small set of nodes, and
+forward updates at a larger granularity to supervisors, and so forth, in a
+tree. The query language should be able to support proxying requests to the
+most recent source of a state, so very large sets of services can be maintained
+at high granularity.
 
 Future directions
 =====
 
-Several people have mentioned wanting to query historical states; to replay the events in ustate over time. There are some difficulties here; notably that compressing hundreds of millions of states can make it a little tricky to query states over the entire dataset. If we restrict ourselves to specific time ranges, storing sequential states as protocol buffers compressed with snappy could work, especially if only *state* changes are written. Storing only state deltas might work as well.
+Several people have mentioned wanting to query historical states; to replay the
+events in ustate over time. There are some difficulties here; notably that
+compressing hundreds of millions of states can make it a little tricky to query
+states over the entire dataset. If we restrict ourselves to specific time
+ranges, storing sequential states as protocol buffers compressed with snappy
+could work, especially if only *state* changes are written. Storing only state
+deltas might work as well.
 
-It'd be interesting to subscribe to states matching a query and receive states pushed to you as soon as they change.
+UState currently offers only one-second time resolution. Sub-second times will
+be provided by a second field (e.g. State.nanoseconds). I haven't decided on
+the granularity yet.
 
-Should be easy to add a UDP acceptor for states as well. Have to figure out eventmachine with multiple backends.
+It'd be interesting to subscribe to states matching a query and receive states
+pushed to you as soon as they change.
 
-When the protocol and architecture are finalized, I plan to reimplement the server in a faster language.
+Should be easy to add a UDP acceptor for states as well. Have to figure out
+eventmachine with multiple backends.
+
+When the protocol and architecture are finalized, I plan to reimplement the
+server in a faster language.
