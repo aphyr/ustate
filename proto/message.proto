@@ -6,7 +6,7 @@ message Message {
   repeated State states = 4;
   optional Query query = 5;
 
-  messsage State {
+  message State {
     optional int64 time = 1;
     optional string state = 2;
     optional string service = 3;
