@@ -1,0 +1,4 @@
+option java_package = "ufold.proto";
+message Msg {
+  required string foo = 1;
+}
