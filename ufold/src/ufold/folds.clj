@@ -24,7 +24,7 @@
     '()
     (let [sum (reduce + (map :metric s))
           state (first s)]
-      (assoc state :metric sum))))
+      '((assoc state :metric sum)))))
 
 (defn mean [s]
   (if (empty? s)
@@ -32,4 +32,4 @@
     (let [sum (reduce + (map :metric s))
           mean (/ sum (count s))
           state (first s)]
-      (assoc state :metric mean))))
+      '((assoc state :metric mean)))))

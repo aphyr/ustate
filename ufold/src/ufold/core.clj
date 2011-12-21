@@ -7,6 +7,8 @@
 (use 'protobuf)
 (defprotobuf Msg Ufold$Msg)
 
+;; Server
+
 (defn dump-bytes [bytes]
   (log :info ["Bytes are " (seq bytes)]))
 

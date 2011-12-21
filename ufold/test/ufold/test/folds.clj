@@ -20,21 +20,3 @@
                big   (take 100 (filter #(> (% :metric) 0.5) random-metrics))
                r (concat big '({:metric 0.5} {:metric -1} {:metric 2}) small)]
            (is (= '(-1 0.5 2) (map :metric (sorted-sample r 0 0.5 1))))))
-
-(deftest sum-empty
-         (is (= () (sum '()))))
-
-(deftest sum-single
-         (is (= '({:metric 1.5}) (sum '({:metric 1.5})))))
-
-(deftest sum-n
-         (is (= '({:metric 10}) (sum (repeat 10 {:metric 1})))))
-
-(deftest mean-empty
-         (is (= () (mean '()))))
-
-(deftest mean-single
-         (is (= '({:metric 1.5}) (mean '({:metric 1.5})))))
-
-(deftest mean-n
-         (is (= '({:metric 1}) (mean (repeat 10 {:metric 1})))))
