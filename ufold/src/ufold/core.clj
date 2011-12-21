@@ -36,10 +36,3 @@
   (start-tcp-server echo-handler
                     {:port 5555,
                      :frame (finite-block :int32)}))
-
-(defn start-client []
-  (wait-for-result
-    (tcp-client {
-                 :host "localhost",
-                 :port 5555,
-                 :frame (finite-block :int32)})))

@@ -1,13 +1,13 @@
 (ns ufold.test.core
   (:use [ufold.core])
+  (:use [ufold.client])
   (:use [clojure.test])
-  (:use [protobuf]))
-
-(use 'lamina.core 'aleph.tcp 'gloss.core)
+  (:use [protobuf])
+  (:use [lamina.core]))
 
 (deftest echoes
   (let [server (start-server)
-        client (start-client)
+        client (tcp-client)
         message (protobuf Msg :foo "hello")]
     (try
       (enqueue client (encode message))
@@ -18,7 +18,7 @@
 
 (deftest ignores-garbage
   (let [server (start-server)
-        client (start-client)]
+        client (tcp-client)]
     (try
       (enqueue client (java.nio.ByteBuffer/wrap (byte-array (map byte [0 1 2]))))
       (is nil? (wait-for-message client))
