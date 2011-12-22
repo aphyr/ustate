@@ -32,6 +32,10 @@
           (log :warn (str "invalid message; closing " client-info))
           (close channel)))))))
 
+; maybe later
+;(defn udp-server []
+;  (let [channel (wait-for-result (udp-socket {:port 5555}))]   
+
 (defn tcp-server []
   (start-tcp-server echo-handler
                     {:port 5555,
