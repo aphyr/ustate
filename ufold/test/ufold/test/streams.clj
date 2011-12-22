@@ -24,7 +24,7 @@
                              :in :x
                              :fold +
                              :out (fn [x] {:x x})})
-               events (take 100 (map (fn [x] {:x x}) (repeatedly rand)))
+               events (take 100 (repeatedly (fn [] {:x (rand-int 1000)})))
                sum (reduce + (map :x events))]
            (doseq [e events] (apply-stream s e))
            (is (= {:x sum} (flush-stream s)))))
@@ -35,7 +35,7 @@
                              :in :x
                              :fold (fn [bits] (reduce + bits))
                              :out (fn [x] {:x x})})
-               events (take 100 (map (fn [x] {:x x}) (repeatedly rand)))
+               events (take 100 (repeatedly (fn [] {:x (rand-int 1000)})))
                sum (reduce + (map :x events))]
            (doseq [e events] (apply-stream s e))
            (is (= {:x sum} (flush-stream s)))))
