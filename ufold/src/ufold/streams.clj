@@ -1,4 +1,5 @@
-(ns ufold.streams)
+(ns ufold.streams
+  (:use ufold.folds))
 
 ; A stream is a specific transformation applied to a series of events,
 ; eventually producing a state.
@@ -33,6 +34,20 @@
                      :out out
                      :state state
                     } m)))))
+
+; A stream which sums its input metric_fs
+(defn sum [m]
+  (defstream (merge {:type :immediate
+                     :init 0
+                     :in :metric_f
+                     :fold +} m)))
+
+; A stream which computes 50, 99, and 100 percentile metrics
+(defn percentiles [m]
+  (defstream (merge {:type :bulk
+                     :init []
+                     :fold (fn [events]
+                             (sorted-sample events [0 50 95 99 100]))} m)))
 
 ; Sends an event to a stream right away
 (defn apply-stream-immediate [stream event]
