@@ -19,13 +19,6 @@
                       (nth sorted idx)))]
       (map extract points))))
 
-(defn sum [s]
-  (if (empty? s)
-    '()
-    (let [sum (reduce + (map :metric s))
-          state (first s)]
-      '((assoc state :metric sum)))))
-
 (defn mean [s]
   (if (empty? s)
     '()

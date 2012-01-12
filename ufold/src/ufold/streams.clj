@@ -12,10 +12,10 @@
 ; fold: folds intermediate representations together
 ; out: maps the results of fold to a state
 ; state: a reference to the current value of the stream.
-(defstruct stream :pred :type :init :in :fold :out :state)
+(defstruct stream-struct :pred :type :init :in :fold :out :state)
 
 ; Create a stream
-(defn defstream [m]
+(defn stream [m]
   (let [pred (fn [_] true)
         t :immediate
         init (or (m :init) '())
@@ -23,7 +23,7 @@
         fold conj
         out identity
         state (ref init)]
-    (apply struct-map stream
+    (apply struct-map stream-struct
            (mapcat identity
                    (merge {
                      :pred pred
@@ -37,14 +37,14 @@
 
 ; A stream which sums its input metric_fs
 (defn sum [m]
-  (defstream (merge {:type :immediate
+  (stream (merge {:type :immediate
                      :init 0
                      :in :metric_f
                      :fold +} m)))
 
 ; A stream which computes 50, 99, and 100 percentile metrics
 (defn percentiles [m]
-  (defstream (merge {:type :bulk
+  (stream (merge {:type :bulk
                      :init []
                      :fold (fn [events]
                              (sorted-sample events [0 50 95 99 100]))} m)))

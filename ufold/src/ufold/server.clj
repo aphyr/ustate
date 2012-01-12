@@ -19,7 +19,7 @@
 ;  (let [channel (wait-for-result (udp-socket {:port 5555}))]   
 
 ; Returns a handler that applies messages to the given streams (by reference)
-(defn handler [streams]
+(defn handler [core]
   (fn [channel client-info]
     (receive-all channel (fn [buffer]
       (when buffer
@@ -28,7 +28,7 @@
           (let [msg (decode buffer)]
             ; Send each event to each stream
             (doseq [event (msg :events)]
-              (apply-streams (deref streams) event))
+              (apply-streams (deref (core :streams)) event))
             ; And acknowledge
             (enqueue channel (protobuf-dump
               (protobuf Msg :ok true))))
@@ -36,10 +36,10 @@
             (log :warn (str "invalid message, closing " client-info))
             (close channel))))))))
 
-(defn tcp-server [& { :keys [streams port]
-                      :or {streams (ref [])
-                           port 5555} }]
-  (let [handler (handler streams)]
-    (start-tcp-server handler
-                      {:port port,
-                       :frame (finite-block :int32)})))
+(defn tcp-server [core opts]
+  (let [handler (handler core)]
+    (start-tcp-server handler 
+      (merge {
+        :port 5555
+        :frame (finite-block :int32)
+      } opts))))

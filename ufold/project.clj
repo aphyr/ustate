@@ -11,4 +11,6 @@
   :cake-plugins [
     [cake-protobuf "0.5.0-beta1"]
   ]
+  :aot [ufold.bin]
+  :main ufold.bin
 )
