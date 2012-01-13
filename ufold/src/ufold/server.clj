@@ -1,6 +1,7 @@
 (ns ufold.server
   (:use [ufold.streams :only (apply-streams)])
   (:use [ufold.core])
+  (:use [ufold.common])
   (:use clojure.contrib.logging)
   (:use lamina.core)
   (:use aleph.tcp)

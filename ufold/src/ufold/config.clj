@@ -27,10 +27,6 @@
   (dosync
     (alter (core :sinks) conj (ufold.sinks/stdout-sink))))
 
-; Shortcut for creating state protobufs
-(defn state [& args]
-  (apply protobuf ufold.core/State args))
-
 ; Start the core
 (defn start []
   (ufold.core/start core))

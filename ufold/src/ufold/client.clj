@@ -1,5 +1,6 @@
 (ns ufold.client
   (:require [aleph.tcp])
+  (:use [ufold.common])
   (:use [lamina.core])
   (:use [protobuf])
   (:use [gloss.core]))
@@ -12,10 +13,19 @@
 (defn send-message [client, message]
   (enqueue client (encode message)))
 
+; Send an event Protobuf
+(defn send-event-protobuf [client event]
+  (send-message client
+    (protobuf Msg :events [event])))
+
+; Send an event (any map; will be passed to (event)) over the given client
+(defn send-event [client eventmap]
+  (send-event-protobuf client (event eventmap)))
+
 ; Send states over the given client.
 (defn send-states [client states]
   (send-message client
-    (protobuf ufold.core/Msg :states states)))
+    (protobuf Msg :states states)))
 
 ; Open a new TCP client
 (defn tcp-client [& { :keys [host port]
@@ -26,3 +36,7 @@
     (aleph.tcp/tcp-client {:host host
                            :port port
                            :frame (finite-block :int32)})))
+
+; Close a client
+(defn close-client [client]
+  (lamina.core/close client))

@@ -1,4 +1,5 @@
 (ns ufold.test.server
+  (:use [ufold.common])
   (:use [ufold.core])
   (:use [ufold.server])
   (:use [ufold.client])

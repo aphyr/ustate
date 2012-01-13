@@ -3,9 +3,6 @@
   (:require ufold.sinks)
   (:require ufold.streams))
 
-(defprotobuf Msg Ufold$Msg)
-(defprotobuf State Ufold$State)
-
 ; A core binds together servers, streams, and clients.
 ; Create a new core
 (defn core []
@@ -14,15 +11,18 @@
    :flushers (ref [])
    :sinks (ref [])})
 
+; Flush a stream to a sink
+(defn flush-stream-sink [stream sink]
+  (ufold.sinks/push sink (ufold.streams/flush-stream stream)))
+
 ; A flusher periodically flushes streams to sinks.
 (defn flusher [o]
-  (.start (Thread. (fn []
-    (loop []
+  (future (loop [] (do
       (Thread/sleep (* 1000 (o :every)))
       (doseq [stream (deref (o :streams))
               sink (deref (o :sinks))]
-        (ufold.sinks/push sink (ufold.streams/flush-stream stream)))
-      (recur))))))
+        (flush-stream-sink stream sink))
+      (recur)))))
 
 ; Adds a new flusher to this core.
 (defn flush-core [core opts]
@@ -36,4 +36,11 @@
 
 (defn start [core])
 
-(defn stop [core])
+(defn stop [core]
+  ; Stop each server
+  (doseq [server (deref (core :servers))]
+    (server))
+
+  ; Stop each flusher
+  (doseq [flusher (deref (core :flushers))]
+    (future-cancel flusher)))

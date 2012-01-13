@@ -1,5 +1,6 @@
 (ns ufold.test.bench
   (:use [ufold.core])
+  (:use [ufold.common])
   (:use [ufold.server])
   (:use [ufold.client])
   (:use [ufold.streams])
