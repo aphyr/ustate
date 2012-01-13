@@ -36,10 +36,14 @@
             (log :warn (str "invalid message, closing " client-info))
             (close channel))))))))
 
-(defn tcp-server [core opts]
+
+(defn tcp-server
+  ([core]
+    (tcp-server core {}))
+  ([core opts]
   (let [handler (handler core)]
     (start-tcp-server handler 
       (merge {
         :port 5555
         :frame (finite-block :int32)
-      } opts))))
+      } opts)))))

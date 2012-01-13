@@ -8,13 +8,13 @@
   (:use [lamina.core]))
 
 (deftest record
-  (let [stream (defstream {:type :immediate
+  (let [stream (stream {:type :immediate
                            :in :metric_f
                            :out (fn [xs] (map 
                                   (fn [x] (protobuf State :metric_f x ))
                                   xs))})
         streams (ref [stream])
-        server (tcp-server :streams streams)
+        server (tcp-server {:streams streams})
         client (tcp-client)
         events (take 1 (repeatedly (fn [] 
                  (protobuf State :metric_f (rand)))))]
@@ -31,7 +31,7 @@
       (server)))))
 
 (deftest ignores-garbage
-  (let [server (tcp-server)
+  (let [server (tcp-server (core))
         client (tcp-client)]
     (try
       (enqueue client (java.nio.ByteBuffer/wrap (byte-array (map byte [0 1 2]))))

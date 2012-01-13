@@ -8,13 +8,13 @@
   (:use [lamina.core]))
 
 (deftest trecord
-         (let [stream (defstream {:type :immediate
+         (let [stream (stream {:type :immediate
                            :in :metric_f
                            :out (fn [xs] (map 
                                   (fn [x] (protobuf State :metric_f x ))
                                   xs))})
         streams (ref [stream])
-        server (tcp-server :streams streams)
+        server (tcp-server {:streams streams})
         client (tcp-client)
         n 1000
         events (take n (repeatedly (fn [] 

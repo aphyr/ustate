@@ -4,7 +4,7 @@
 
 (deftest create-stream
          ; Default
-         (let [s (defstream {})]
+         (let [s (stream {})]
            (is (true? ((s :pred) {:x :foo})))
            (is (= (s :type) :immediate))
            (is (= (s :init) '()))
@@ -14,11 +14,11 @@
            (is (= (deref (s :state)) '())))
 
         ; Custom initial state
-        (let [s (defstream {:init 2})]
+        (let [s (stream {:init 2})]
           (is (= (deref (s :state)) 2))))
 
 (deftest stream-immediate
-         (let [s (defstream {
+         (let [s (stream {
                              :type :immediate
                              :init 0
                              :in :x
@@ -30,7 +30,7 @@
            (is (= {:x sum} (flush-stream s)))))
 
 (deftest stream-bulk
-         (let [s (defstream {
+         (let [s (stream {
                              :type :bulk
                              :in :x
                              :fold (fn [bits] (reduce + bits))
