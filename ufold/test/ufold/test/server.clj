@@ -22,8 +22,7 @@
     (try
       ; Send all events to server
       (doseq [e events]
-        (send-message client (protobuf Msg :events [e]))
-        (wait-for-message client))
+        (send-message client (protobuf Msg :events [e])))
       ; Verify that events are present
       (let [recorded-events (flush-stream stream)]
         (is (= events recorded-events)))

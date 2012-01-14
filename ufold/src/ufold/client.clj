@@ -11,7 +11,8 @@
 
 ; Send a message over the given client
 (defn send-message [client, message]
-  (enqueue client (encode message)))
+  (enqueue client (encode message))
+  (wait-for-message client))
 
 ; Send an event Protobuf
 (defn send-event-protobuf [client event]
@@ -22,10 +23,14 @@
 (defn send-event [client eventmap]
   (send-event-protobuf client (event eventmap)))
 
-; Send states over the given client.
-(defn send-states [client states]
+; Send a state Protobuf
+(defn send-state-protobuf [client event]
   (send-message client
-    (protobuf Msg :states states)))
+    (protobuf Msg :states [event])))
+
+; Send an event (any map; will be passed to (event)) over the given client
+(defn send-state [client statemap]
+  (send-state-protobuf client (state statemap)))
 
 ; Open a new TCP client
 (defn tcp-client [& { :keys [host port]

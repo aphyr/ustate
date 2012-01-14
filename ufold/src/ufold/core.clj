@@ -1,7 +1,7 @@
 (ns ufold.core
-  (:use protobuf)
-  (:require ufold.sinks)
-  (:require ufold.streams))
+  (:use [protobuf])
+  (:require [ufold.sinks])
+  (:require [ufold.streams]))
 
 ; A core binds together servers, streams, and clients.
 ; Create a new core

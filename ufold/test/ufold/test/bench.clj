@@ -24,9 +24,7 @@
       (time (do
         ; Send all events to server
         (doseq [e events]
-          (send-message client (protobuf Msg :events [e])))
-        ; Read confirmations
-        (dotimes [i n] (wait-for-message client))))
+          (send-message client (protobuf Msg :events [e])))))
       
     (finally
       (close client)
