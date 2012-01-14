@@ -12,7 +12,7 @@
 (defn sorted-sample [s & points]
   (if (empty? s) 
     '()
-    (let [sorted (sort-by :metric s)
+    (let [sorted (sort-by :metric_f s)
           n (count sorted)
           extract (fn [point]
                     (let [idx (min (- n 1) (int (Math/floor (* n point))))]
@@ -22,7 +22,7 @@
 (defn mean [s]
   (if (empty? s)
     '()
-    (let [sum (reduce + (map :metric s))
+    (let [sum (reduce + (map :metric_f s))
           mean (/ sum (count s))
           state (first s)]
       '((assoc state :metric mean)))))

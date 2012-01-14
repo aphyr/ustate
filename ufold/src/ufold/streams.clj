@@ -48,12 +48,20 @@
                                          :description (m :description)}))
           } m)))
 
-; A stream which computes 50, 99, and 100 percentile metrics
+; A stream which computes 50, 99, and 100 percentile events.
 (defn percentiles [m]
-  (stream (merge {:type :bulk
-                     :init []
-                     :fold (fn [events]
-                             (sorted-sample events [0 50 95 99 100]))} m)))
+  (let [intervals [0 50 95 99 100]
+        fold (fn [events]
+               (let [samples (sorted-sample events intervals)]
+                 (
+
+    (stream (merge {:type :bulk
+                    :init []
+                    :fold (fn [events]
+                            let [samples (sorted-sample
+                            (map event
+                              (sorted-sample events [0 50 95 99 100])))
+                    } m)))
 
 ; Sends an event to a stream right away
 (defn apply-stream-immediate [stream event]

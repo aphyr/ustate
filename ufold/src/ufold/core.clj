@@ -11,9 +11,14 @@
    :flushers (ref [])
    :sinks (ref [])})
 
-; Flush a stream to a sink
+; Flush a stream to a sink.
 (defn flush-stream-sink [stream sink]
-  (ufold.sinks/push sink (ufold.streams/flush-stream stream)))
+  (let [value (ufold.streams/flush-stream stream)]
+    (if (map? value)
+      ; Single state
+      (ufold.sinks/push sink value)
+      ; List of states
+      (doseq [v value] (ufold.sinks/push sink v)))))
 
 ; A flusher periodically flushes streams to sinks.
 (defn flusher [o]

@@ -40,3 +40,36 @@
              (finally
                (close-client client)
                (stop core)))))
+
+(deftest percentiles
+         (let [core (core)
+               server (ufold.server/tcp-server core)
+               stream (ufold.streams/percentiles)
+               sink (ufold.sinks/list-sink)
+               client (ufold.client/tcp-client)]
+           (try
+             (dosync
+               (alter (core :servers) conj server)
+               (alter (core :streams) conj stream)
+               (alter (core :sinks) conj sink))
+
+             ; Send some events over the network
+             (map #(send-event {:metric_f %}) [0,0,0,0,0,0,0,0])
+             (close-client client)
+             
+             ; Flush
+             (flush-stream-sink stream sink)
+
+             ; Get states
+             (let [states (map first (group-by :service (deref (sink :value))))]
+               
+
+
+             ; Confirm receipt
+             (let [state (first (deref (sink :value)))]
+               (is (= 3 (state :metric_f)))
+               (is (> (state :time) 1326494648))
+
+             (finally
+               (close-client client)
+               (stop core)))))
