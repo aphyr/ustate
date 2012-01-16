@@ -23,7 +23,7 @@
         in identity
         fold conj
         out identity
-        state (ref init)]
+        state (ref (if (fn? init) (init) init))]
     (apply struct-map stream-struct
            (mapcat identity
                    (merge {
@@ -46,6 +46,26 @@
                                          :service (m :service)
                                          :host (m :host)
                                          :description (m :description)}))
+          } m)))
+
+; A stream which sums its input metric_fs and divides by the time since it was
+; last flushed. This isn't perfect; I'll need to enhance the stream system
+; to choose definite time intervals.
+(defn rate [m]
+  (stream (merge {:type :immediate
+                  :init (fn [] [(. System nanoTime) 0])
+                  :in :metric_f
+                  :fold (fn [[t0, x0], x] [t0, (+ x0 x)])
+                  :out (fn [[t0, sum]]
+                         (try
+                           (let [t1 (. System nanoTime)
+                                 rate (/ (* sum 1000000000.0) (- t1 t0))]
+                             (state {:metric_f rate
+                                     :service (m :service)
+                                     :host (m :host)
+                                     :description (m :description)}))
+                           (catch java.lang.ArithmeticException e
+                             '())))
           } m)))
 
 ; A stream which computes 0, 50, 99, and 100 percentile events.
@@ -89,8 +109,10 @@
 (defn flush-stream-value [stream]
   (dosync
     (let [state (stream :state)
-          value (deref state)]
-      (ref-set state (stream :init))
+          value (deref state)
+          init (stream :init)
+          initval (if (fn? init) (init) init)]
+      (ref-set state initval)
       value)))
 
 ; Realize a stream's state, clearing it in the process.

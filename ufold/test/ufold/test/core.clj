@@ -8,6 +8,18 @@
   (:use [clojure.contrib.generic.functor :only (fmap)])
   (:use [clojure.test]))
 
+(defmacro tim
+  "Evaluates expr and returns the time it took in seconds"
+  [expr]
+  `(let [start# (. System (nanoTime))
+         ret# ~expr]
+     (/ (- (. System (nanoTime)) start#) 1000000000.0)))
+
+(defn approx-equal [x, y]
+  (if (= x y) true
+    (let [f (try (/ x y) (catch java.lang.ArithmeticException e (/ y x)))]
+      (< 0.99 f 1.01))))
+
 (deftest sum
          (let [core (core)
                server (ufold.server/tcp-server core)
@@ -37,6 +49,46 @@
                (is (= "host" (state :host)))
                (is (= "service" (state :service)))
                (is (= "desc" (state :description))))
+
+             (finally
+               (close-client client)
+               (stop core)))))
+
+(deftest rate
+         (let [core (core)
+               server (ufold.server/tcp-server core)
+               stream (ufold.streams/rate {:host "host"
+                                           :service "service"
+                                           :description "desc"})
+               sink (ufold.sinks/list-sink)
+               client (ufold.client/tcp-client)]
+           (try
+             (dosync
+               (alter (core :servers) conj server)
+               (alter (core :streams) conj stream)
+               (alter (core :sinks) conj sink))
+
+             (let [t (tim (do
+                       ; Reset sink
+                       (flush-stream-sink stream sink)
+
+                       ; Send some events over the network
+                       (send-event client {:metric_f 1})
+                       (Thread/sleep 100)
+                       (send-event client {:metric_f 2})
+                       (Thread/sleep 100)
+                       (close-client client)
+                       
+                       ; Flush
+                       (flush-stream-sink stream sink)))]
+
+               ; Confirm receipt
+               (let [state (first (deref (sink :value)))]
+                 (is (approx-equal (/ 3.0 t) (state :metric_f)))
+                 (is (approx-equal (state :time) (unix-time)))
+                 (is (= "host" (state :host)))
+                 (is (= "service" (state :service)))
+                 (is (= "desc" (state :description)))))
 
              (finally
                (close-client client)
