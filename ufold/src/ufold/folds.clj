@@ -1,15 +1,8 @@
-(ns ufold.folds)
+(ns ufold.folds
+  (:use [ufold.common]))
 
-;; Ufold transforms events into states. This module contains functions which
-;; transform a sequence of events into a list of states.
-;; 
-;; Percentiles: yields the 50th, 95th, 99th, 100th percentile event from the
-;;              stream.
-;; Sum:         yields the sum of all events in the sequence.
-;; Mean:        yields the mean of all events in the sequence.
-;; Rate:        sums the events and divides by time.
-
-(defn sorted-sample [s & points]
+; Returns the events in s, sorted and taken at points.
+(defn sorted-sample-extract [s points]
   (if (empty? s) 
     '()
     (let [sorted (sort-by :metric_f s)
@@ -19,10 +12,10 @@
                       (nth sorted idx)))]
       (map extract points))))
 
-(defn mean [s]
-  (if (empty? s)
-    '()
-    (let [sum (reduce + (map :metric_f s))
-          mean (/ sum (count s))
-          state (first s)]
-      '((assoc state :metric mean)))))
+; Sample s at points, return states with service remapped to service + point.
+(defn sorted-sample [s points]
+  (map (fn [point, event]
+         (state (assoc event :service
+                       (str (event :service) " " point))))
+       points
+       (sorted-sample-extract s points)))

@@ -48,20 +48,16 @@
                                          :description (m :description)}))
           } m)))
 
-; A stream which computes 50, 99, and 100 percentile events.
-(defn percentiles [m]
-  (let [intervals [0 50 95 99 100]
-        fold (fn [events]
-               (let [samples (sorted-sample events intervals)]
-                 (
-
-    (stream (merge {:type :bulk
-                    :init []
-                    :fold (fn [events]
-                            let [samples (sorted-sample
-                            (map event
-                              (sorted-sample events [0 50 95 99 100])))
-                    } m)))
+; A stream which computes 0, 50, 99, and 100 percentile events.
+; Hack hack hack hack
+(defn percentiles 
+  ([] (percentiles {}))
+  ([m]
+    (let [points (or (m :points) [0 0.5 0.95 0.99 1])]
+      (stream (merge {:type :bulk
+                      :init []
+                      :fold (fn [events] (sorted-sample events points))}
+                     m)))))
 
 ; Sends an event to a stream right away
 (defn apply-stream-immediate [stream event]
