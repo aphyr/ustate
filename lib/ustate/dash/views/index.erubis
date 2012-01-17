@@ -3,3 +3,5 @@
 <div class="box"><%= state_chart query 'service = "cpu" or service = "memory" or service =~ "disk%" or service = "load"' %></div>
 
 <div class="box"><%= state_chart query('host = "host0"'), transpose: true %></div>
+
+<div class="box"><%= state_chart query('true') %></div>

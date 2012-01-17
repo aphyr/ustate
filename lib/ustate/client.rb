@@ -26,6 +26,8 @@ class UState::Client
     case state_opts
     when UState::State
       state = state_opts
+    when UState::Event
+      return send_event state_opts
     else
       unless state_opts.include? :host
         state_opts[:host] = Socket.gethostname
@@ -36,6 +38,25 @@ class UState::Client
     message = UState::Message.new :states => [state]
 
     # Transmit
+    with_connection do |s|
+      s << message.encode_with_length
+      read_message s
+    end
+  end
+
+  def send_event(event_opts)
+    case event_opts
+    when UState::Event
+      event = event_opts
+    else
+      unless event_opts.include? :host
+        event_opts[:host] = Socket.gethostname
+      end
+      event_opts = UState::State.new(event_opts)
+    end
+
+    message = UState::Message.new :events => [event]
+
     with_connection do |s|
       s << message.encode_with_length
       read_message s

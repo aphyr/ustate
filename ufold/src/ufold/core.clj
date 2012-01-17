@@ -13,12 +13,15 @@
 
 ; Flush a stream to a sink.
 (defn flush-stream-sink [stream sink]
-  (let [value (ufold.streams/flush-stream stream)]
-    (if (map? value)
-      ; Single state
-      (ufold.sinks/push sink value)
-      ; List of states
-      (doseq [v value] (ufold.sinks/push sink v)))))
+  (try 
+    (let [value (ufold.streams/flush-stream stream)]
+      (if (map? value)
+        ; Single state
+        (ufold.sinks/push sink value)
+        ; List of states
+        (doseq [v value] (ufold.sinks/push sink v))))
+    (catch Exception e
+      (prn "Exception" e "flushing" stream "to" sink))))
 
 ; A flusher periodically flushes streams to sinks.
 (defn flusher [o]

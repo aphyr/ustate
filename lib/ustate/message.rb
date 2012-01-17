@@ -6,6 +6,7 @@ module UState
     optional :error, :string, 3
     repeated :states, State, 4
     optional :query, Query, 5
+    repeated :events, Event, 6
 
     def encode_with_length
       buffer = ''

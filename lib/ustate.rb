@@ -4,6 +4,7 @@ module UState
   require 'beefcake'
   require 'ustate/version'
   require 'ustate/state'
+  require 'ustate/event'
   require 'ustate/query'
   require 'ustate/message'
 end

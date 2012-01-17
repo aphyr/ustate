@@ -8,7 +8,7 @@
 (defmethod push :stdout [sink state]
   (prn state))
 (defmethod push :client [sink state]
-  (send-state-protobuf state))
+  (send-state-protobuf (sink :client) state))
 (defmethod push :list [sink state]
   (dosync (alter (sink :value) conj state)))
 
@@ -18,7 +18,7 @@
 ; A sink that sends values to ustate
 (defn client-sink [client]
   {:type :client
-   :value client})
+   :client client})
 
 ; A sink that accrues values in a list ref
 (defn list-sink []
