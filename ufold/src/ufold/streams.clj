@@ -121,3 +121,35 @@
     (case (stream :type)
       :immediate (flush-stream-value stream)
       :bulk ((stream :fold) (flush-stream-value stream)))))
+
+; Passes events on to children only when (field event) matches pred.
+(defn where [field pred & children]
+    (fn [event]
+      (let [value (field event)]
+        (when (case (class pred)
+                java.util.regex.Pattern (re-find pred value)
+                (= pred value))
+          (doseq [child children]
+            (child event))))))
+
+; Transforms an event by associng a new k:v pair
+(defn with [field value & children]
+  (fn [event]
+    (let [e (assoc event field value)]
+      (doseq [child children]
+        (child e)))))
+
+; Splits stream by field
+(defmacro by [field & children]
+  ; new-fork is a function which gives us a new copy of our children.
+  ; table is a reference which maps (field event) to a fork (or list of
+  ; children).
+  `(let [new-fork# (fn [] ~children)
+         table# (ref {})]
+     (fn [event#]
+       (let [fork-name# (field event#)
+             fork# (dosync
+                    (or ((deref table#) fork-name#)
+                        ((alter table assoc fork-name# (new-fork#)) 
+                           fork-name#)))]
+         (doseq [child# fork#] (child# event#))))))

@@ -39,3 +39,12 @@
                sum (reduce + (map :x events))]
            (doseq [e events] (apply-stream s e))
            (is (= {:x sum} (flush-stream s)))))
+
+(deftest where
+         (let [r (ref nil)
+               s (where [:service "foo"] #(ref-set r %))]
+           (s {:service "bar"})
+           (is (= nil (deref r)))
+
+           (s {:service "foo"})
+           (is (= {:service "foo"} (deref r)))))
