@@ -139,17 +139,25 @@
       (doseq [child children]
         (child e)))))
 
-; Splits stream by field
+; Splits stream by field.
+; Every time an event arrives with a new value of field, this macro invokes
+; its enclosed form to return a *new*, distinct stream for that particular
+; value.
 (defmacro by [field & children]
   ; new-fork is a function which gives us a new copy of our children.
   ; table is a reference which maps (field event) to a fork (or list of
   ; children).
-  `(let [new-fork# (fn [] ~children)
-         table# (ref {})]
-     (fn [event#]
-       (let [fork-name# (field event#)
-             fork# (dosync
-                    (or ((deref table#) fork-name#)
-                        ((alter table assoc fork-name# (new-fork#)) 
-                           fork-name#)))]
-         (doseq [child# fork#] (child# event#))))))
+  `(let [new-fork# (fn [] [~@children])]
+     (by-fn ~field new-fork#)))
+
+(defn by-fn [field new-fork]
+  (prn "field" field)
+  (prn "new-fork" (new-fork))
+  (let [table (ref {})]
+     (fn [event]
+       (let [fork-name (field event)
+             fork (dosync
+                    (or ((deref table) fork-name)
+                        ((alter table assoc fork-name (new-fork)) 
+                           fork-name)))]
+         (doseq [child fork] (child event))))))
