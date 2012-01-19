@@ -8,6 +8,7 @@
   (:use [clojure.contrib.generic.functor :only (fmap)])
   (:use [clojure.test]))
 
+(comment
 (defmacro tim
   "Evaluates expr and returns the time it took in seconds"
   [expr]
@@ -123,4 +124,4 @@
 
              (finally
                (close-client client)
-               (stop core)))))
+               (stop core))))))

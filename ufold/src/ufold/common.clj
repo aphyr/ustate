@@ -12,14 +12,22 @@
 
 ; Create a new event
 (defn event [opts]
-  (let [t (or (opts :time)
-              (round (unix-time)))]
+  (let [t (round (or (opts :time)
+                     (unix-time)))]
     (apply protobuf Event
-      (apply concat (merge {:time t} opts)))))
+      (apply concat (merge opts {:time t})))))
+
+(defn approx-equal 
+([x,y]
+  (approx-equal x y 0.01))
+([x, y, tol]
+  (if (= x y) true
+    (let [f (try (/ x y) (catch java.lang.ArithmeticException e (/ y x)))]
+      (< (- 1 tol) f (+ 1 tol))))))
 
 ; Create a new state
 (defn state [opts]
-  (let [t (or (opts :time)
-              (round (unix-time)))]
+  (let [t (round (or (opts :time)
+                     (unix-time)))]
     (apply protobuf State
-      (apply concat (merge {:time t} opts)))))
+      (apply concat (merge opts {:time t})))))

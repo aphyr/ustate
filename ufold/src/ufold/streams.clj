@@ -68,6 +68,78 @@
                              '())))
           } m)))
 
+; I believe this is correct, but on my MBP tops out at around 300K
+; events/sec. Experimental benchmarks suggest that:
+(comment (time
+             (doseq [f (map (fn [t] (future
+               (let [c (ref 0)]
+                 (dotimes [i (/ total threads)]
+                         (let [e {:metric_f 1 :time (unix-time)}]
+                           (dosync (commute c + (:metric_f e))))))))
+                            (range threads))]
+               (deref f))))
+; can do something like 1.9 million events/sec over 4 threads.  That suggests
+; there's a space for a faster (but less correct) version which uses either
+; agents or involves fewer STM ops. Assuming all events have local time might
+; actually be more useful than correctly binning/expiring multiple 
+(defn part-time-fn [interval create add finish]
+  ; All intervals are [start, end)
+  (let [; The oldest time we are allowed to flush rates for.
+        watermark (ref 0)
+        ; A list of all bins we're tracking.
+        bins (ref {})
+        ; Eventually finish a bin.
+        finish-eventually (fn [bin start]
+          (.start (new Thread (fn []
+                         (let [end (+ start interval)]
+                           ; Sleep until this bin is past
+                           (Thread/sleep (max 0 (* 1000 (- end (unix-time)))))
+                           ; Prevent anyone else from creating or changing this
+                           ; bin. Congratulations, you've invented timelocks.
+                           (dosync
+                             (alter bins dissoc start)
+                             (alter watermark max end))
+                           ; Now that we're safe from modification, finish him!
+                           (finish bin start end))))))
+        
+        ; Add event to the bin for a time
+        bin (fn [event t]
+              (let [start (quot t interval)]
+                (dosync
+                  (when (<= (deref watermark) start)
+                    ; We are accepting this event.
+                    ; Return an existing table
+                    ; or create and store a new one
+                    (let [current ((deref bins) start)]
+                      (if current
+                        ; Use current
+                        (add current event)
+                        ; Create new
+                        (let [bin (create event)]
+                          (alter bins assoc start bin)
+                          (finish-eventually bin start))))))))]
+
+    (fn [event]
+      (let [; What time did this event happen at?
+            t (or (event :time) (unix-time))]
+        (bin event t)))))
+
+; Take the sum of every event over interval seconds and divide by the interval
+; size.
+(defn rate2 [interval & children]
+  (part-time-fn interval
+      (fn [event] {:count (ref (event :metric_f))
+                   :state (state event)})
+      (fn [r event] (dosync
+                      (commute (r :count) + (event :metric_f))))
+      (fn [r start end]
+        (let [event (dosync
+                (let [count (deref (r :count))
+                      rate (/ count (- end start))]
+                  (merge (r :state) {:metric_f rate
+                                     :time end})))]
+          (doseq [child children] (child event))))))
+
 ; A stream which computes 0, 50, 99, and 100 percentile events.
 ; Hack hack hack hack
 (defn percentiles 
@@ -151,8 +223,6 @@
      (by-fn ~field new-fork#)))
 
 (defn by-fn [field new-fork]
-  (prn "field" field)
-  (prn "new-fork" (new-fork))
   (let [table (ref {})]
      (fn [event]
        (let [fork-name (field event)

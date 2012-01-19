@@ -1,44 +1,7 @@
 (ns ufold.test.streams
   (:use [ufold.streams])
+  (:use [ufold.common])
   (:use [clojure.test]))
-
-(deftest create-stream
-         ; Default
-         (let [s (stream {})]
-           (is (true? ((s :pred) {:x :foo})))
-           (is (= (s :type) :immediate))
-           (is (= (s :init) '()))
-           (is (= (s :in) identity))
-           (is (= (s :fold) conj))
-           (is (= (s :out) identity))
-           (is (= (deref (s :state)) '())))
-
-        ; Custom initial state
-        (let [s (stream {:init 2})]
-          (is (= (deref (s :state)) 2))))
-
-(deftest stream-immediate
-         (let [s (stream {
-                             :type :immediate
-                             :init 0
-                             :in :x
-                             :fold +
-                             :out (fn [x] {:x x})})
-               events (take 100 (repeatedly (fn [] {:x (rand-int 1000)})))
-               sum (reduce + (map :x events))]
-           (doseq [e events] (apply-stream s e))
-           (is (= {:x sum} (flush-stream s)))))
-
-(deftest stream-bulk
-         (let [s (stream {
-                             :type :bulk
-                             :in :x
-                             :fold (fn [bits] (reduce + bits))
-                             :out (fn [x] {:x x})})
-               events (take 100 (repeatedly (fn [] {:x (rand-int 1000)})))
-               sum (reduce + (map :x events))]
-           (doseq [e events] (apply-stream s e))
-           (is (= {:x sum} (flush-stream s)))))
 
 (deftest where-test
          (let [r (ref nil)
@@ -77,3 +40,81 @@
            (doseq [event events]
              (s event))
            (is (= (count events) (deref i)))))
+
+(deftest rate-slow-even
+         (let [output (ref [])
+               interval 1
+               intervals 5
+               gen-rate 10
+               total (* gen-rate intervals)
+               gen-period (/ interval gen-rate)
+               r (rate2 interval
+                        (fn [event] (dosync (alter output conj event))))]
+
+           ; Generate events
+           (dotimes [_ intervals]
+             (dotimes [_ gen-rate]
+               (Thread/sleep (int (* 1000 gen-period)))
+               (r {:metric_f 1 :time (unix-time)})))
+
+           ; Give all futures time to complete
+           (Thread/sleep (* 1000 interval))
+
+           ; Verify output states
+           (let [o (deref output)]
+             
+             ; All events recorded
+             (is (approx-equal total (reduce + (map :metric_f o))))
+
+             ; Middle events should have the correct rate.
+             (is (every? (fn [measured-rate] 
+                           (approx-equal gen-rate measured-rate))
+                         (map :metric_f (drop 1 (drop-last o)))))
+           
+             ; First and last events should be complementary
+             (let [first-last (+ (:metric_f (first o))
+                                 (:metric_f (last o)))]
+               (is (or (approx-equal (* 2 gen-rate) first-last)
+                       (approx-equal gen-rate first-last))))
+
+             )))
+
+(deftest rate-fast
+         (let [output (ref [])
+               interval 1
+               total 10000000
+               threads 4
+               r (rate2 interval
+                        (fn [event] (dosync (alter output conj event))))
+               t0 (unix-time)]
+
+           (time
+             (doseq [f (map (fn [t] (future
+               (let [c (ref 0)]
+                 (dotimes [i (/ total threads)]
+                         (let [e {:metric_f 1.0 :time (unix-time)}]
+                           (dosync (commute c + (:metric_f e))))))))
+                            (range threads))]
+               (deref f)))
+
+           ; Generate events
+           (doseq [f (map (fn [t] (future 
+                                 (dotimes [i (/ total threads)]
+                                   (r {:metric_f 1 :time (unix-time)}))))
+                          (range threads))]
+                   (deref f))
+             
+           ; Give all futures time to complete
+           (Thread/sleep (* 1000 interval))
+
+           (let [t1 (unix-time)
+                 duration (- t1 t0)
+                 o (dosync (deref output))]
+            
+             (prn o)
+             (prn duration)
+
+             ; All events recorded
+             (is (approx-equal total (reduce + (map :metric_f o))))
+
+             )))

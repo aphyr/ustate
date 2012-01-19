@@ -8,7 +8,7 @@
 (defn core []
   {:servers (ref [])
    :streams (ref [])
-   :flushers (ref [])
+   :lushers (ref [])
    :sinks (ref [])})
 
 ; Flush a stream to a sink.
