@@ -1,6 +1,7 @@
 (ns ufold.streams
   (:use ufold.common)
-  (:use ufold.folds))
+  (:use ufold.folds)
+  (:use [clojure.contrib.math]))
 
 ; On my MBP tops out at around 300K
 ; events/sec. Experimental benchmarks suggest that:
@@ -100,7 +101,7 @@
                 (let [count (deref (r :count))
                       rate (/ count (- end start))]
                   (merge (deref (:state r)) 
-                         {:metric_f rate :time end})))]
+                         {:metric_f rate :time (round end)})))]
           (doseq [child children] (child event))))))
 
 (defn percentiles [interval points & children]
