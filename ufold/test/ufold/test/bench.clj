@@ -2,30 +2,35 @@
   (:use [ufold.core])
   (:use [ufold.common])
   (:use [ufold.server])
-  (:use [ufold.client])
+  (:use [ufold.client :only [tcp-client close-client send-event-protobuf]])
   (:use [ufold.streams])
-  (:use [clojure.test])
-  (:use [protobuf])
-  (:use [lamina.core]))
+  (:use [clojure.test]))
 
-(deftest trecord
-         (let [stream (stream {:type :immediate
-                           :in :metric_f
-                           :out (fn [xs] (map 
-                                  (fn [x] (protobuf State :metric_f x ))
-                                  xs))})
-        streams (ref [stream])
-        server (tcp-server {:streams streams})
-        client (tcp-client)
-        n 1000
-        events (take n (repeatedly (fn [] 
-                 (protobuf State :metric_f (rand)))))]
-    (try
-      (time (do
-        ; Send all events to server
-        (doseq [e events]
-          (send-message client (protobuf Msg :events [e])))))
-      
-    (finally
-      (close client)
-      (server)))))
+(deftest sum-test
+         (let [final (ref nil)
+               core (core)
+               server (tcp-server core)
+               stream (sum (register final))
+               n 1000
+               threads 10
+               events (take n (repeatedly (fn [] 
+                        (event {:metric_f 1}))))]
+
+           (dosync
+             (alter (core :servers) conj server)
+             (alter (core :streams) conj stream))
+
+           (doall events)
+
+           (try 
+             (time (threaded threads
+                             (let [client (tcp-client)]
+                                (doseq [e events]
+                                  ; Send all events to server
+                                  (send-event-protobuf client e))
+                               (close-client client))))
+             
+            (is (= (* threads n) (:metric_f (deref final)))) 
+
+            (finally
+              (stop core)))))

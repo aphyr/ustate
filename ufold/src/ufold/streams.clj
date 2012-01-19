@@ -2,72 +2,6 @@
   (:use ufold.common)
   (:use ufold.folds))
 
-; A stream is a specific transformation applied to a series of events,
-; eventually producing a state.
-; pred: determines whether a given event should be accepted
-; type: one of :immediate or :bulk
-;       immediate calls fold continuously as (fold accumulator, new)
-;       bulk calls fold with a sequence of values (fold seq)
-; init: The default value for folding into.
-; in: maps an event to an intermediate representation for fold. Optional.
-; fold: folds intermediate representations together
-; out: maps the results of fold to a state
-; state: a reference to the current value of the stream.
-(defstruct stream-struct :pred :type :init :in :fold :out :state)
-
-; Create a stream
-(defn stream [m]
-  (let [pred (fn [_] true)
-        t :immediate
-        init (or (m :init) '())
-        in identity
-        fold conj
-        out identity
-        state (ref (if (fn? init) (init) init))]
-    (apply struct-map stream-struct
-           (mapcat identity
-                   (merge {
-                     :pred pred
-                     :type t
-                     :init init
-                     :in in
-                     :fold fold
-                     :out out
-                     :state state
-                    } m)))))
-
-; A stream which sums its input metric_fs
-(defn sum [m]
-  (stream (merge {:type :immediate
-                  :init 0
-                  :in :metric_f
-                  :fold +
-                  :out (fn [sum] (state {:metric_f sum
-                                         :service (m :service)
-                                         :host (m :host)
-                                         :description (m :description)}))
-          } m)))
-
-; A stream which sums its input metric_fs and divides by the time since it was
-; last flushed. This isn't perfect; I'll need to enhance the stream system
-; to choose definite time intervals.
-(defn rate [m]
-  (stream (merge {:type :immediate
-                  :init (fn [] [(. System nanoTime) 0])
-                  :in :metric_f
-                  :fold (fn [[t0, x0], x] [t0, (+ x0 x)])
-                  :out (fn [[t0, sum]]
-                         (try
-                           (let [t1 (. System nanoTime)
-                                 rate (/ (* sum 1000000000.0) (- t1 t0))]
-                             (state {:metric_f rate
-                                     :service (m :service)
-                                     :host (m :host)
-                                     :description (m :description)}))
-                           (catch java.lang.ArithmeticException e
-                             '())))
-          } m)))
-
 ; I believe this is correct, but on my MBP tops out at around 300K
 ; events/sec. Experimental benchmarks suggest that:
 (comment (time
@@ -126,7 +60,7 @@
 
 ; Take the sum of every event over interval seconds and divide by the interval
 ; size.
-(defn rate2 [interval & children]
+(defn rate [interval & children]
   (part-time-fn interval
       (fn [event] {:count (ref (event :metric_f))
                    :state (state event)})
@@ -140,59 +74,57 @@
                                      :time end})))]
           (doseq [child children] (child event))))))
 
-; A stream which computes 0, 50, 99, and 100 percentile events.
-; Hack hack hack hack
-(defn percentiles 
-  ([] (percentiles {}))
-  ([m]
-    (let [points (or (m :points) [0 0.5 0.95 0.99 1])]
-      (stream (merge {:type :bulk
-                      :init []
-                      :fold (fn [events] (sorted-sample events points))}
-                     m)))))
+(defn percentiles [interval points & children]
+  (part-time-fn interval
+                (fn [event] (ref [event]))
+                (fn [r event] (dosync (alter r conj event)))
+                (fn [r start end]
+                  (let [samples (dosync
+                                  (sorted-sample (deref r) points))]
+                    (doseq [event samples, child children] (child event))))))
 
-; Sends an event to a stream right away
-(defn apply-stream-immediate [stream event]
-  (let [in    (stream :in)
-        fold  (stream :fold)
-        value (in event)]
+; Sums all metric_fs together. Emits the most recent event each time this stream
+; is called, but with summed metric_f.
+(defn sum [& children]
+  (let [sum (ref 0)]
+    (fn [event]
+      (let [s (dosync (commute sum + (:metric_f event)))
+            event (assoc event :metric_f s)]
+        (doseq [child children] (child event))))))
+
+; Emits the most recent event each time this stream is called, but with the
+; average of all received metric_fs.
+(defn mean [children]
+  (let [sum (ref nil)
+        total (ref 0)]
+    (fn [event]
+      (let [m (dosync 
+                (let [t (commute total inc)
+                      s (commute sum + (:metric_f event))]
+                  (/ s t)))
+            event (assoc event :metric_f m)]
+        (doseq [child children] (child event))))))
+
+; Conj events onto the given reference
+(defn append [reference]
+  (fn [event]
     (dosync
-      (alter (stream :state) fold value))))
+      (alter reference conj event))))
 
-; Send an event to a stream for later processing
-(defn apply-stream-bulk [stream event]
-  (let [in    (stream :in)
-        value (in event)]
-    (dosync
-      (alter (stream :state) conj value))))
+; Set reference to the most recent event that passes through.
+(defn register [reference]
+  (fn [event]
+    (dosync (ref-set reference event))))
 
-; Send an event to a stream
-(defn apply-stream [stream event]
-  (when ((stream :pred) event)
-    (case (stream :type)
-      :immediate (apply-stream-immediate stream event)
-      :bulk (apply-stream-bulk stream event))))
+; Prints an event to stdout
+(defn stdout [event]
+  (fn [event]
+    (prn event)))
 
-; Send an event to several streams
-(defn apply-streams [streams event]
-  (doseq [s streams] (apply-stream s event)))
-
-; Returns the stream's state and reinitializes the state
-(defn flush-stream-value [stream]
-  (dosync
-    (let [state (stream :state)
-          value (deref state)
-          init (stream :init)
-          initval (if (fn? init) (init) init)]
-      (ref-set state initval)
-      value)))
-
-; Realize a stream's state, clearing it in the process.
-(defn flush-stream [stream]
-  ((stream :out)
-    (case (stream :type)
-      :immediate (flush-stream-value stream)
-      :bulk ((stream :fold) (flush-stream-value stream)))))
+; Sends a map to a client, coerced to state
+(defn send-state [client]
+  (fn [statelike]
+    (ufold.client/send-state client statelike)))
 
 ; Passes events on to children only when (field event) matches pred.
 (defn where [field pred & children]

@@ -8,7 +8,6 @@
   (:use [clojure.contrib.generic.functor :only (fmap)])
   (:use [clojure.test]))
 
-(comment
 (defmacro tim
   "Evaluates expr and returns the time it took in seconds"
   [expr]
@@ -16,80 +15,27 @@
          ret# ~expr]
      (/ (- (. System (nanoTime)) start#) 1000000000.0)))
 
-(defn approx-equal [x, y]
-  (if (= x y) true
-    (let [f (try (/ x y) (catch java.lang.ArithmeticException e (/ y x)))]
-      (< 0.99 f 1.01))))
-
 (deftest sum
          (let [core (core)
+               done (ref [])
                server (ufold.server/tcp-server core)
-               stream (ufold.streams/sum {:host "host"
-                                          :service "service"
-                                          :description "desc"})
-               sink (ufold.sinks/list-sink)
+               stream (ufold.streams/sum (ufold.streams/append done)) 
                client (ufold.client/tcp-client)]
            (try
              (dosync
                (alter (core :servers) conj server)
-               (alter (core :streams) conj stream)
-               (alter (core :sinks) conj sink))
+               (alter (core :streams) conj stream))
 
              ; Send some events over the network
              (send-event client {:metric_f 1})
              (send-event client {:metric_f 2})
+             (send-event client {:metric_f 3})
              (close-client client)
              
-             ; Flush
-             (flush-stream-sink stream sink)
-
              ; Confirm receipt
-             (let [state (first (deref (sink :value)))]
-               (is (= 3 (state :metric_f)))
-               (is (> (state :time) 1326494648))
-               (is (= "host" (state :host)))
-               (is (= "service" (state :service)))
-               (is (= "desc" (state :description))))
-
-             (finally
-               (close-client client)
-               (stop core)))))
-
-(deftest rate
-         (let [core (core)
-               server (ufold.server/tcp-server core)
-               stream (ufold.streams/rate {:host "host"
-                                           :service "service"
-                                           :description "desc"})
-               sink (ufold.sinks/list-sink)
-               client (ufold.client/tcp-client)]
-           (try
-             (dosync
-               (alter (core :servers) conj server)
-               (alter (core :streams) conj stream)
-               (alter (core :sinks) conj sink))
-
-             (let [t (tim (do
-                       ; Reset sink
-                       (flush-stream-sink stream sink)
-
-                       ; Send some events over the network
-                       (send-event client {:metric_f 1})
-                       (Thread/sleep 100)
-                       (send-event client {:metric_f 2})
-                       (Thread/sleep 100)
-                       (close-client client)
-                       
-                       ; Flush
-                       (flush-stream-sink stream sink)))]
-
-               ; Confirm receipt
-               (let [state (first (deref (sink :value)))]
-                 (is (approx-equal (/ 3.0 t) (state :metric_f)))
-                 (is (approx-equal (state :time) (unix-time)))
-                 (is (= "host" (state :host)))
-                 (is (= "service" (state :service)))
-                 (is (= "desc" (state :description)))))
+             (let [l (deref done)]
+               (is (= [1 3 6] 
+                      (map (fn [x] (:metric_f x)) l))))
 
              (finally
                (close-client client)
@@ -97,26 +43,31 @@
 
 (deftest percentiles
          (let [core (core)
+               out (ref [])
                server (ufold.server/tcp-server core)
-               stream (ufold.streams/percentiles)
-               sink (ufold.sinks/list-sink)
+               stream (ufold.streams/percentiles 1 [0 0.5 0.95 0.99 1] 
+                                                 (ufold.streams/append out))
                client (ufold.client/tcp-client)]
            (try
              (dosync
                (alter (core :servers) conj server)
-               (alter (core :streams) conj stream)
-               (alter (core :sinks) conj sink))
+               (alter (core :streams) conj stream))
+
+             ; Wait until we aren't aligned... ugh, timing
+             (Thread/sleep (- 1100 (* (mod (unix-time) 1) 1000)))
 
              ; Send some events over the network
              (doseq [n (shuffle (take 101 (iterate inc 0)))]
                (send-event client {:metric_f n :service "per"}))
              (close-client client)
              
-             ; Flush
-             (flush-stream-sink stream sink)
+             ; Wait for percentiles
+             (Thread/sleep 1000)
 
              ; Get states
-             (let [states (fmap first (group-by :service (deref (sink :value))))]
+             (let [events (deref out)
+                   states (fmap first (group-by :service events))]
+
                (is (= ((states "per 0.5") :metric_f) 50))
                (is (= ((states "per 0.95") :metric_f) 95))
                (is (= ((states "per 0.99") :metric_f) 99))
@@ -124,4 +75,4 @@
 
              (finally
                (close-client client)
-               (stop core))))))
+               (stop core)))))

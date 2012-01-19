@@ -7,6 +7,16 @@
 (defprotobuf State Ufold$State)
 (defprotobuf Event Ufold$Event)
 
+(defmacro threaded [thread-count & body]
+  `(let [futures# (map (fn [_#] (future ~@body))
+                      (range 0 ~thread-count))]
+    (doseq [fut# futures#] (deref fut#))))
+
+(defn ppmap [threads f s]
+  (let [work (partition (/ (count s) threads) s)
+        result (pmap (fn [part] (doall (map f part))) work)]
+    (doall (apply concat result))))
+
 (defn unix-time []
   (/ (System/currentTimeMillis) 1000))
 

@@ -48,7 +48,7 @@
                gen-rate 10
                total (* gen-rate intervals)
                gen-period (/ interval gen-rate)
-               r (rate2 interval
+               r (rate interval
                         (fn [event] (dosync (alter output conj event))))]
 
            ; Generate events
@@ -82,9 +82,9 @@
 (deftest rate-fast
          (let [output (ref [])
                interval 1
-               total 10000000
+               total 100000
                threads 4
-               r (rate2 interval
+               r (rate interval
                         (fn [event] (dosync (alter output conj event))))
                t0 (unix-time)]
 
@@ -111,9 +111,6 @@
                  duration (- t1 t0)
                  o (dosync (deref output))]
             
-             (prn o)
-             (prn duration)
-
              ; All events recorded
              (is (approx-equal total (reduce + (map :metric_f o))))
 

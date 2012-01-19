@@ -1,5 +1,4 @@
 (ns ufold.server
-  (:use [ufold.streams :only (apply-streams)])
   (:use [ufold.core])
   (:use [ufold.common])
   (:use clojure.contrib.logging)
@@ -28,15 +27,16 @@
         (try
           (let [msg (decode buffer)]
             ; Send each event to each stream
-            (doseq [event (msg :events)]
-              (apply-streams (deref (core :streams)) event))
+            (doseq [event (msg :events)
+                    stream (deref (:streams core))]
+              (stream event))
+
             ; And acknowledge
             (enqueue channel (protobuf-dump
               (protobuf Msg :ok true))))
           (catch com.google.protobuf.InvalidProtocolBufferException e
             (log :warn (str "invalid message, closing " client-info))
             (close channel))))))))
-
 
 (defn tcp-server
   ([core]
