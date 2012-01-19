@@ -2,7 +2,7 @@
   (:use ufold.common)
   (:use ufold.folds))
 
-; I believe this is correct, but on my MBP tops out at around 300K
+; On my MBP tops out at around 300K
 ; events/sec. Experimental benchmarks suggest that:
 (comment (time
              (doseq [f (map (fn [t] (future
@@ -15,7 +15,8 @@
 ; can do something like 1.9 million events/sec over 4 threads.  That suggests
 ; there's a space for a faster (but less correct) version which uses either
 ; agents or involves fewer STM ops. Assuming all events have local time might
-; actually be more useful than correctly binning/expiring multiple 
+; actually be more useful than correctly binning/expiring multiple times.
+; Also: broken?
 (defn part-time-fn [interval create add finish]
   ; All intervals are [start, end)
   (let [; The oldest time we are allowed to flush rates for.
@@ -58,25 +59,53 @@
             t (or (event :time) (unix-time))]
         (bin event t)))))
 
+; Partitions events by time (fast variant). Over interval seconds, adds events
+; to a bin, created with (create). When the interval is complete, calls (finish
+; bin start-time end-time)
+;
+; This leaks a thread. Need to think about dynamic scheduling/expiry.
+(defn part-time-fast [interval create add finish]
+  (let [current (ref (create))
+        start (ref (unix-time))
+        switcher (.start (new Thread (bound-fn []
+          ; Switch between bins
+          (loop [] 
+            ; Wait for interval
+            (Thread/sleep (* interval 1000))
+            ; Switch out old bin, create new one, call finish on old bin.
+            (apply finish
+                   (dosync
+                     (let [bin (deref current)
+                           old-start (deref start)
+                           boundary (unix-time)]
+                       (ref-set start boundary)
+                       (ref-set current (create))
+                       [bin old-start boundary])))
+            (recur)))))]
+    (fn [event]
+      (dosync
+        (add (deref current) event)))))
+
 ; Take the sum of every event over interval seconds and divide by the interval
 ; size.
 (defn rate [interval & children]
-  (part-time-fn interval
-      (fn [event] {:count (ref (event :metric_f))
-                   :state (state event)})
+  (part-time-fast interval
+      (fn [] {:count (ref 0)
+              :state (ref {})})
       (fn [r event] (dosync
-                      (commute (r :count) + (event :metric_f))))
+                      (ref-set (:state r) event)
+                      (alter (:count r) + (:metric_f event))))
       (fn [r start end]
         (let [event (dosync
                 (let [count (deref (r :count))
                       rate (/ count (- end start))]
-                  (merge (r :state) {:metric_f rate
-                                     :time end})))]
+                  (merge (deref (:state r)) 
+                         {:metric_f rate :time end})))]
           (doseq [child children] (child event))))))
 
 (defn percentiles [interval points & children]
-  (part-time-fn interval
-                (fn [event] (ref [event]))
+  (part-time-fast interval
+                (fn [] (ref []))
                 (fn [r event] (dosync (alter r conj event)))
                 (fn [r start end]
                   (let [samples (dosync

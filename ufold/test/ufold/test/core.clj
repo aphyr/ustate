@@ -54,7 +54,7 @@
                (alter (core :streams) conj stream))
 
              ; Wait until we aren't aligned... ugh, timing
-             (Thread/sleep (- 1100 (* (mod (unix-time) 1) 1000)))
+             ;(Thread/sleep (- 1100 (* (mod (unix-time) 1) 1000)))
 
              ; Send some events over the network
              (doseq [n (shuffle (take 101 (iterate inc 0)))]

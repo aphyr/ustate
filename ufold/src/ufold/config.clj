@@ -1,9 +1,8 @@
 (ns ufold.config
-  (:use protobuf)
   (:require [ufold.core])
-  (:use [ufold.client])
   (:require [ufold.server])
-  (:require [ufold.streams])
+  (:use [ufold.client])
+  (:use [ufold.streams])
   (:require [ufold.sinks])
   (:gen-class))
 
@@ -16,11 +15,10 @@
     (alter (core :servers) conj
       (ufold.server/tcp-server core (apply hash-map opts)))))
 
-; Add a stream
-(defn stream [& opts]
+; Add streams
+(defn streams [& things]
   (dosync
-    (alter (core :streams) conj 
-      (ufold.streams/stream (apply hash-map opts)))))
+    (alter (core :streams) concat things)))
 
 ; Start the core
 (defn start []

@@ -10,6 +10,15 @@
            (is (= nil (deref r)))
 
            (s {:service "foo"})
+           (is (= {:service "foo"} (deref r))))
+        
+         ; Regex
+         (let [r (ref nil)
+               s (where :service #"^f" (fn [e] (dosync (ref-set r e))))]
+           (s {:service "bar"})
+           (is (= nil (deref r)))
+
+           (s {:service "foo"})
            (is (= {:service "foo"} (deref r)))))
 
 (deftest with-test-test ; goddamnit fucking namespace collision bullshit
@@ -82,7 +91,7 @@
 (deftest rate-fast
          (let [output (ref [])
                interval 1
-               total 100000
+               total 1000000
                threads 4
                r (rate interval
                         (fn [event] (dosync (alter output conj event))))
@@ -105,12 +114,12 @@
                    (deref f))
              
            ; Give all futures time to complete
-           (Thread/sleep (* 1000 interval))
+           (Thread/sleep (* 1100 interval))
 
            (let [t1 (unix-time)
                  duration (- t1 t0)
                  o (dosync (deref output))]
-            
+           
              ; All events recorded
              (is (approx-equal total (reduce + (map :metric_f o))))
 
