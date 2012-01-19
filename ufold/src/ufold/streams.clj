@@ -122,7 +122,7 @@
     (prn event)))
 
 ; Sends a map to a client, coerced to state
-(defn send-state [client]
+(defn fwd [client]
   (fn [statelike]
     (ufold.client/send-state client statelike)))
 
@@ -130,8 +130,8 @@
 (defn where [field pred & children]
     (fn [event]
       (let [value (field event)]
-        (when (case (class pred)
-                java.util.regex.Pattern (re-find pred value)
+        (when (if (= (class pred) java.util.regex.Pattern)
+                (re-find pred value)
                 (= pred value))
           (doseq [child children]
             (child event))))))
