@@ -18,15 +18,14 @@
     ; Open new client
     (ref-set (:conn client)
              (pipelined-client (fn []
-               (wait-for-result
-                 (aleph.tcp/tcp-client {:host (:host client)
-                                        :port (:port client)
-                                        :frame (finite-block :int32)})))))))
+               (aleph.tcp/tcp-client {:host (:host client)
+                                      :port (:port client)
+                                      :frame (finite-block :int32)}))))))
 
 ; Send bytes over the given client and await reply, no error handling.
 (defn send-message-raw [client, raw]
   (let [c (deref (:conn client))]
-    (c raw 5)))
+    (c raw 5000)))
 
 ; Send a message over the given client, and await reply.
 ; Will retry connections once, then fail returning false.
