@@ -1,7 +1,16 @@
 (ns ufold.streams
   (:use ufold.common)
   (:use ufold.folds)
-  (:use [clojure.contrib.math]))
+  (:use [clojure.contrib.math])
+  (:use [clojure.contrib.logging]))
+
+; Call each fn, in order, with event. Rescues and logs any failure.
+(defmacro call-rescue [event children]
+  `(doseq [child# ~children]
+     (try
+       (child# ~event)
+       (catch Exception e#
+         (log :warn (str child# " threw") e#)))))
 
 ; On my MBP tops out at around 300K
 ; events/sec. Experimental benchmarks suggest that:
@@ -102,7 +111,7 @@
                       rate (/ count (- end start))]
                   (merge (deref (:state r)) 
                          {:metric_f rate :time (round end)})))]
-          (doseq [child children] (child event))))))
+          (call-rescue event children)))))
 
 (defn percentiles [interval points & children]
   (part-time-fast interval
@@ -111,7 +120,7 @@
                 (fn [r start end]
                   (let [samples (dosync
                                   (sorted-sample (deref r) points))]
-                    (doseq [event samples, child children] (child event))))))
+                    (doseq [event samples] (call-rescue event children))))))
 
 ; Sums all metric_fs together. Emits the most recent event each time this stream
 ; is called, but with summed metric_f.
@@ -120,7 +129,7 @@
     (fn [event]
       (let [s (dosync (commute sum + (:metric_f event)))
             event (assoc event :metric_f s)]
-        (doseq [child children] (child event))))))
+        (call-rescue event children)))))
 
 ; Emits the most recent event each time this stream is called, but with the
 ; average of all received metric_fs.
@@ -133,7 +142,7 @@
                       s (commute sum + (:metric_f event))]
                   (/ s t)))
             event (assoc event :metric_f m)]
-        (doseq [child children] (child event))))))
+        (call-rescue event children)))))
 
 ; Conj events onto the given reference
 (defn append [reference]
@@ -163,15 +172,13 @@
         (when (if (= (class pred) java.util.regex.Pattern)
                 (re-find pred value)
                 (= pred value))
-          (doseq [child children]
-            (child event))))))
+          (call-rescue event children)))))
 
 ; Transforms an event by associng a new k:v pair
 (defn with [field value & children]
   (fn [event]
     (let [e (assoc event field value)]
-      (doseq [child children]
-        (child e)))))
+      (call-rescue e children))))
 
 ; Splits stream by field.
 ; Every time an event arrives with a new value of field, this macro invokes
@@ -192,4 +199,4 @@
                     (or ((deref table) fork-name)
                         ((alter table assoc fork-name (new-fork)) 
                            fork-name)))]
-         (doseq [child fork] (child event))))))
+         (call-rescue event fork)))))
