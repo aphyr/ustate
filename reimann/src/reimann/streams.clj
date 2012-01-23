@@ -178,11 +178,16 @@
 (defmulti with (fn [& args] (map? (first args))))
 (defmethod with true [m & children]
   (fn [event]
-    (let [e (merge event m)]
+;    Merge on protobufs is broken; nil values aren't applied.
+;    (let [e (merge event m)]
+    (let [e (reduce (fn [m, [k, v]]
+                      (if (nil? v) (dissoc m k) (assoc m k v)))
+                    event m)]
       (call-rescue e children))))
 (defmethod with false [k v & children]
   (fn [event]
-    (let [e (assoc event k v)]
+;    (let [e (assoc event k v)]
+    (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
       (call-rescue e children))))
 
 ; Splits stream by field.
