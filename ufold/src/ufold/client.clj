@@ -9,38 +9,40 @@
 
 ; Alter client with a new connection.
 (defn open-tcp-conn [client]
-  (log :info (str "reopening TCP connection to " client))
+  (log :debug (str "opening TCP connection to " client))
   (dosync
     ; Close this client
     (when-let [cur (deref (:conn client))]
-      (lamina.connections/close-connection (deref (:conn client))))
+      (close (deref (:conn client))))
 
     ; Open new client
     (ref-set (:conn client)
-             (pipelined-client (fn []
-               (aleph.tcp/tcp-client {:host (:host client)
-                                      :port (:port client)
-                                      :frame (finite-block :int32)}))))))
+               (wait-for-result
+                 (aleph.tcp/tcp-client {:host (:host client)
+                                        :port (:port client)
+                                        :frame (finite-block :int32)})))))
 
 ; Send bytes over the given client and await reply, no error handling.
 (defn send-message-raw [client, raw]
   (let [c (deref (:conn client))]
-    (c raw 5000)))
+    (enqueue c raw)
+    (wait-for-message c 5000)))
 
 ; Send a message over the given client, and await reply.
 ; Will retry connections once, then fail returning false.
 (defn send-message [client, message]
-  (let [raw (protobuf-dump message)]
-     (try 
-       (send-message-raw client raw)
-       (catch Exception e
-         (log :warn "first send failed, retrying" e)
-         (try 
-           (open-tcp-conn client)
-           (send-message-raw client raw)
-           (catch Exception e
-             (log :warn "second send failed" e)
-             false))))))
+  (locking client
+    (let [raw (protobuf-dump message)]
+       (try 
+         (send-message-raw client raw)
+         (catch Exception e
+           (log :warn "first send failed, retrying" e)
+           (try 
+             (open-tcp-conn client)
+             (send-message-raw client raw)
+             (catch Exception e
+               (log :warn "second send failed" e)
+               false)))))))
 
 ; Send an event Protobuf
 (defn send-event-protobuf [client event]
