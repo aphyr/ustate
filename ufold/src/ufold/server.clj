@@ -34,8 +34,13 @@
             ; And acknowledge
             (enqueue channel (protobuf-dump
               (protobuf Msg :ok true))))
+          (catch java.nio.channels.ClosedChannelException e
+            (log :warn (str "channel closed")))
           (catch com.google.protobuf.InvalidProtocolBufferException e
             (log :warn (str "invalid message, closing " client-info))
+            (close channel))
+          (catch Exception e
+            (log :warn (str "Exception " e))
             (close channel))))))))
 
 (defn tcp-server

@@ -2,17 +2,46 @@
   (:require [aleph.tcp])
   (:use [ufold.common])
   (:use [lamina.core])
+  (:use [lamina.connections])
   (:use [protobuf])
-  (:use [gloss.core]))
+  (:use [gloss.core])
+  (:use [clojure.contrib.logging]))
 
-; Transform a message into bytes
-(defn encode [message]
-  (protobuf-dump message))
+; Alter client with a new connection.
+(defn open-tcp-conn [client]
+  (log :info (str "reopening TCP connection to " client))
+  (dosync
+    ; Close this client
+    (when-let [cur (deref (:conn client))]
+      (lamina.connections/close-connection (deref (:conn client))))
 
-; Send a message over the given client
+    ; Open new client
+    (ref-set (:conn client)
+             (pipelined-client (fn []
+               (wait-for-result
+                 (aleph.tcp/tcp-client {:host (:host client)
+                                        :port (:port client)
+                                        :frame (finite-block :int32)})))))))
+
+; Send bytes over the given client and await reply, no error handling.
+(defn send-message-raw [client, raw]
+  (let [c (deref (:conn client))]
+    (c raw 5)))
+
+; Send a message over the given client, and await reply.
+; Will retry connections once, then fail returning false.
 (defn send-message [client, message]
-  (enqueue client (encode message))
-  (wait-for-message client))
+  (let [raw (protobuf-dump message)]
+     (try 
+       (send-message-raw client raw)
+       (catch Exception e
+         (log :warn "first send failed, retrying" e)
+         (try 
+           (open-tcp-conn client)
+           (send-message-raw client raw)
+           (catch Exception e
+             (log :warn "second send failed" e)
+             false))))))
 
 ; Send an event Protobuf
 (defn send-event-protobuf [client event]
@@ -32,16 +61,18 @@
 (defn send-state [client statemap]
   (send-state-protobuf client (state statemap)))
 
-; Open a new TCP client
+(defstruct tcp-client-struct :host :port :conn)
+
+; Create a new TCP client
 (defn tcp-client [& { :keys [host port]
                       :or {port 5555
                            host "localhost"}
                       :as opts}]
-  (wait-for-result
-    (aleph.tcp/tcp-client {:host host
-                           :port port
-                           :frame (finite-block :int32)})))
+  (let [c (struct tcp-client-struct host port (ref nil))]
+    (open-tcp-conn c)
+    c))
 
 ; Close a client
 (defn close-client [client]
-  (lamina.core/close client))
+  (dosync
+    (lamina.core/close (deref (:conn client)))))
