@@ -11,7 +11,7 @@
                core (core)
                server (tcp-server core)
                stream (sum (register final))
-               n 1000
+               n 100
                threads 10
                events (take n (repeatedly (fn [] 
                         (event {:metric_f 1}))))]
