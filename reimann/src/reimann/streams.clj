@@ -210,3 +210,16 @@
                         ((alter table assoc fork-name (new-fork)) 
                            fork-name)))]
          (call-rescue event fork)))))
+
+; Passes on events only when (f event) differs from that of the previous event.
+(defn changed [pred & children]
+  (let [previous (ref nil)]
+    (fn [event]
+      (when
+        (dosync
+          (let [cur (pred event) 
+                old (deref previous)]
+            (when-not (= cur old)
+              (ref-set previous cur)
+              true)))
+        (call-rescue event children)))))

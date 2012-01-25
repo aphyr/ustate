@@ -139,3 +139,19 @@
              (is (approx-equal total (reduce + (map :metric_f o))))
 
              )))
+
+(deftest changed-test
+         (let [output (ref [])
+               r (changed :state
+                          (fn [event] (dosync (alter output conj event))))
+               states [:ok :bad :bad :ok :ok :ok :evil :bad]]
+           
+           ; Apply states
+           (doseq [state states]
+             (r {:state state}))
+
+           ; Check output
+           (is (= [:ok :bad :ok :evil :bad]
+                  (vec (map (fn [s] (:state s)) (deref output)))))))
+           
+
