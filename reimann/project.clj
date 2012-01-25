@@ -13,4 +13,5 @@
   ]
   :aot [reimann.bin]
   :main reimann.bin
+  :disable-implicit-clean true
 )
