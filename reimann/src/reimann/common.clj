@@ -1,11 +1,11 @@
 (ns reimann.common
-  (:use [protobuf])
+  (:use [protobuf.core])
   (:import [java.util Date])
   (:use [clojure.contrib.math]))
 
-(defprotobuf Msg Reimann$Msg)
-(defprotobuf State Reimann$State)
-(defprotobuf Event Reimann$Event)
+(def Msg (protodef reimann.Proto$Msg))
+(def State (protodef reimann.Proto$State))
+(def Event (protodef reimann.Proto$Event))
 
 (defmacro threaded [thread-count & body]
   `(let [futures# (map (fn [_#] (future ~@body))

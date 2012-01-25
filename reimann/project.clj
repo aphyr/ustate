@@ -3,10 +3,10 @@
   :dependencies [
     [clojure "1.2.0"]
     [aleph "0.2.0"]
-    [clojure-protobuf "0.4.5"]
+    [protobuf "0.6.0-beta4"]
   ]
   :dev-dependencies [
-    [criterium "0.2.0"]
+    [protobuf "0.6.0-beta4"]
   ]
   :cake-plugins [
     [cake-protobuf "0.5.0-beta1"]

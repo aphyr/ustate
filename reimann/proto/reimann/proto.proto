@@ -1,3 +1,6 @@
+option java_package = "reimann";
+option java_outer_classname = "Proto";
+
 message State {
   optional int64 time = 1;
   optional string state = 2;

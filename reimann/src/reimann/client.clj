@@ -3,8 +3,8 @@
   (:use [reimann.common])
   (:use [lamina.core])
   (:use [lamina.connections])
-  (:use [protobuf])
   (:use [gloss.core])
+  (:use [protobuf.core])
   (:use [clojure.contrib.logging]))
 
 ; Alter client with a new connection.

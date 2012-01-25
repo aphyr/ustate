@@ -3,7 +3,6 @@
   (:use [reimann.core])
   (:use [reimann.server])
   (:use [clojure.test])
-  (:use [protobuf])
   (:use [lamina.core])
   (:use [aleph.tcp])
   (:use [gloss.core]))

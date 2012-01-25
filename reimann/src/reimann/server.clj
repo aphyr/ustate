@@ -5,7 +5,7 @@
   (:use lamina.core)
   (:use aleph.tcp)
   (:use gloss.core)
-  (:use protobuf)
+  (:use [protobuf.core])
   (:require gloss.io))
 
 (defn decode [s]

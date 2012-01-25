@@ -1,5 +1,4 @@
 (ns reimann.core
-  (:use [protobuf])
   (:require [reimann.sinks])
   (:require [reimann.streams]))
 
