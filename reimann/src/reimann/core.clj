@@ -1,5 +1,4 @@
 (ns reimann.core
-  (:require [reimann.sinks])
   (:require [reimann.streams]))
 
 ; This will probably come into play more when I work on hot reloading.

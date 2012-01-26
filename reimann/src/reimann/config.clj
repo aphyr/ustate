@@ -3,7 +3,6 @@
   (:require [reimann.server])
   (:use [reimann.client])
   (:use [reimann.streams])
-  (:require [reimann.sinks])
   (:gen-class))
 
 ; A stateful DSL for expressing reimann configuration.

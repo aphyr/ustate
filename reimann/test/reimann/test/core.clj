@@ -1,6 +1,5 @@
 (ns reimann.test.core
   (:require [reimann.server])
-  (:require [reimann.sinks])
   (:require [reimann.streams])
   (:use [reimann.client])
   (:use [reimann.common])
