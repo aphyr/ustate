@@ -7,11 +7,13 @@
 
 ; Call each fn, in order, with event. Rescues and logs any failure.
 (defmacro call-rescue [event children]
-  `(doseq [child# ~children]
-     (try
-       (child# ~event)
-       (catch Exception e#
-         (log :warn (str child# " threw") e#)))))
+  `(do
+     (doseq [child# ~children]
+       (try
+         (child# ~event)
+         (catch Exception e#
+           (log :warn (str child# " threw") e#))))
+     true))
 
 ; On my MBP tops out at around 300K
 ; events/sec. Experimental benchmarks suggest that:
@@ -258,3 +260,57 @@
   (fn [event]
     (when (> x (:metric_f event))
       (call-rescue event children))))
+
+(defn where-test [k v]
+  (if (= (class v) java.util.regex.Pattern)
+    (list 're-find v (list (keyword k) 'event))
+    (list '= v (list (keyword k) 'event))))
+
+; Hack hack hack hack
+(defn where-rewrite [expr]
+  "Rewrites lists recursively. Replaces (metric_f x y z) with a test matching
+  (:metric_f event) to any of x, y, or z, either by = or re-find. Replaces any
+  other instance of metric_f with (:metric_f event). Does the same for host,
+  service, event, state, time, and description."
+  (let [syms #{'host 'service 'state 'metric_f 'time 'description}]
+    (if (list? expr)
+      ; This is a list.
+      (if (syms (first expr))
+        ; list starting with a magic symbol
+        (let [[field & values] expr]
+          (if (= 1 (count values))
+            ; Match one value
+            (where-test field (first values))
+            ; Any of the values
+            (concat '(or)
+                       (map (fn [value] (where-test field value)) values))))
+
+        ; Other list
+        (map where-rewrite expr))
+
+      ; Not a list
+      (if (syms expr)
+        ; Expr *is* a magic sym
+        (list (keyword expr) 'event)
+        expr))))
+
+(defmacro where [expr & children]
+  "Passes on events where expr is true. Expr is rewritten using where-rewrite.
+  'event is bound to the event under consideration. Examples:
+
+  ; Match any state where metric is either 1, 2, 3, or 4.
+  (where (metric_f 1 2 3 4) ...)
+  
+  ; Match a state where the metric is negative AND the state is ok.
+  (where (and (> 0 metric_f)
+              (state \"ok\")) ...)
+
+  ; Match a state where an arbitrary function f applied to the event is truthy.
+  (where (f event) ...)
+
+  ; Match a state where the host begins with web
+  (where (host #\"^web\") ...)"
+  (let [p (where-rewrite expr)]
+    `(fn [event#]
+       (when (let [~'event event#] ~p)
+         (call-rescue event# [~@children])))))

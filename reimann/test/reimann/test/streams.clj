@@ -21,6 +21,36 @@
            (s {:service "foo"})
            (is (= {:service "foo"} (deref r)))))
 
+(deftest where-event
+         (let [r (ref [])
+               s (where (or (= "good" (:service event))
+                            (< 2 (:metric_f event)))
+                        (fn [e] (dosync (alter r conj e))))
+               events [{:service "good" :metric_f 0}
+                       {:service "bad" :metric_f 0}
+                       {:metric_f 1}
+                       {:service "bad" :metric_f 1}
+                       {:service "bad" :metric_f 3}]
+               expect [{:service "good" :metric_f 0}
+                       {:service "bad" :metric_f 3}]]
+           (doseq [e events] (s e))
+           (is (= expect (deref r)))))
+
+(deftest where-field
+         (let [r (ref [])
+               s (where (or (state "ok" "good")
+                            (= "weird" state))
+                        (fn [e] (dosync (alter r conj e))))
+               events [{:state "ok"}
+                       {:state "good"}
+                       {:state "weird"}
+                       {:state "error"}]
+               expect [{:state "ok"}
+                       {:state "good"}
+                       {:state "weird"}]]
+           (doseq [e events] (s e))
+           (is (= expect (deref r)))))
+
 (deftest with-kv
          (let [r (ref nil)
                s (with :service "foo" (fn [e] (dosync (ref-set r e))))]
