@@ -1,6 +1,7 @@
 (ns reimann.streams
   (:use reimann.common)
   (:use reimann.folds)
+  (:require [reimann.client])
   (:use [clojure.contrib.math])
   (:use [clojure.contrib.logging]))
 
@@ -223,3 +224,29 @@
               (ref-set previous cur)
               true)))
         (call-rescue event children)))))
+
+; Passes on events only when their metric falls within the given inclusive
+; range. (within [0 1] (fn [event] do-something))
+(defn within [r & children]
+  (fn [event]
+    (when (<= (first r) (:metric_f event) (last r))
+      (call-rescue event children))))
+
+(defn without [r & children]
+  "Passes on events only when their metric falls outside the given (inclusive) range."
+  (fn [event]
+    (when (not (<= (first r) (:metric_f event) (last r)))
+      (call-rescue event children))))
+
+(defn over [x & children]
+  "Passes on events only when their metric is greater than x"
+  (fn [event]
+    (when (< x (:metric_f event))
+      (call-rescue event children))))
+
+(defn under [x & children]
+  "Passes on events only when their metric is smaller than x"
+  (fn [event]
+    (when (> x (:metric_f event))
+      (call-rescue event children))))
+

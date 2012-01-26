@@ -154,4 +154,42 @@
            (is (= [:ok :bad :ok :evil :bad]
                   (vec (map (fn [s] (:state s)) (deref output)))))))
            
+(deftest within-test
+         (let [output (ref [])
+               r (within [1 2]
+                         (fn [e] (dosync (alter output conj e))))
+               metrics [0.5 1 1.5 2 2.5]
+               expect [1 1.5 2]]
+           
+           (doseq [m metrics] (r {:metric_f m}))
+           (is (= expect (vec (map (fn [s] (:metric_f s)) (deref output)))))))
 
+(deftest without-test
+         (let [output (ref [])
+               r (without [1 2]
+                         (fn [e] (dosync (alter output conj e))))
+               metrics [0.5 1 1.5 2 2.5]
+               expect [0.5 2.5]]
+           
+           (doseq [m metrics] (r {:metric_f m}))
+           (is (= expect (vec (map (fn [s] (:metric_f s)) (deref output)))))))
+
+(deftest over-test
+         (let [output (ref [])
+               r (over 1.5
+                         (fn [e] (dosync (alter output conj e))))
+               metrics [0.5 1 1.5 2 2.5]
+               expect [2 2.5]]
+           
+           (doseq [m metrics] (r {:metric_f m}))
+           (is (= expect (vec (map (fn [s] (:metric_f s)) (deref output)))))))
+
+(deftest under-test
+         (let [output (ref [])
+               r (under 1.5
+                         (fn [e] (dosync (alter output conj e))))
+               metrics [0.5 1 1.5 2 2.5]
+               expect [0.5 1]]
+           
+           (doseq [m metrics] (r {:metric_f m}))
+           (is (= expect (vec (map (fn [s] (:metric_f s)) (deref output)))))))
