@@ -166,14 +166,23 @@
   (fn [statelike]
     (reimann.client/send-state client statelike)))
 
-; Passes events on to children only when (field event) matches pred.
-(defn where [field pred & children]
+(defn match [f value & children]
+  "Passes events on to children only when (f event) is equal to value. If f is a regex, uses re-find to match."
     (fn [event]
-      (let [value (field event)]
-        (when (if (= (class pred) java.util.regex.Pattern)
-                (re-find pred value)
-                (= pred value))
-          (call-rescue event children)))))
+      (let [x (f event)]
+        (when (if (= (class value) java.util.regex.Pattern)
+                (re-find value x)
+                (= value x))
+          (call-rescue event children)
+          true))))
+
+; Shortcuts for match
+(defn description? [value & children] (apply match :description value children))
+(defn host? [value & children] (apply match :host value children))
+(defn metric? [value & children] (apply match :metric_f value children))
+(defn service? [value & children] (apply match :service value children))
+(defn state? [value & children] (apply match :state value children))
+(defn time? [value & children] (apply match :time value children))
 
 ; Transforms an event by associng a set of new k:v pairs
 (defmulti with (fn [& args] (map? (first args))))
@@ -249,4 +258,3 @@
   (fn [event]
     (when (> x (:metric_f event))
       (call-rescue event children))))
-

@@ -3,9 +3,9 @@
   (:use [reimann.common])
   (:use [clojure.test]))
 
-(deftest where-test
+(deftest match-test
          (let [r (ref nil)
-               s (where :service "foo" (fn [e] (dosync (ref-set r e))))]
+               s (match :service "foo" (fn [e] (dosync (ref-set r e))))]
            (s {:service "bar"})
            (is (= nil (deref r)))
 
@@ -14,7 +14,7 @@
         
          ; Regex
          (let [r (ref nil)
-               s (where :service #"^f" (fn [e] (dosync (ref-set r e))))]
+               s (service? #"^f" (fn [e] (dosync (ref-set r e))))]
            (s {:service "bar"})
            (is (= nil (deref r)))
 
