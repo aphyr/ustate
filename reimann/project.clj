@@ -4,6 +4,7 @@
     [clojure "1.2.0"]
     [aleph "0.2.0"]
     [protobuf "0.6.0-beta4"]
+    [net.cgrand/parsley "0.8.0"]
   ]
   :dev-dependencies [
     [protobuf "0.6.0-beta4"]
