@@ -8,9 +8,6 @@
   :dev-dependencies [
     [protobuf "0.6.0-beta4"]
   ]
-  :cake-plugins [
-    [cake-protobuf "0.5.0-beta1"]
-  ]
   :aot [reimann.bin]
   :main reimann.bin
   :disable-implicit-clean true
