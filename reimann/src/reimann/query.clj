@@ -23,14 +23,13 @@
       "and" (apply list 'and kids)
       "not" (apply list 'not kids)
       "="   (apply list '= kids)
-      ">"   (apply list '> kids)
-      ">="  (apply list '>= kids)
-      "<"   (apply list '< kids)
-      "<="  (apply list '<= kids)
-      "=~"  (apply list 'approx kids)
-;      "=~" (apply list 're-find
-;                  (re-pattern (.replaceAll n "%" ".*"))
-;                  kids)
+      ">"   (list 'when (first kids) (apply list '> kids))
+      ">="  (list 'when (first kids) (apply list '>= kids))
+      "<"   (list 'when (first kids) (apply list '< kids))
+      "<="  (list 'when (first kids) (apply list '<= kids))
+      "=~"  (list 'when (first kids) (list 're-find 
+                               (re-pattern (.replaceAll (last kids) "%" ".*"))
+                               (first kids)))
       "!="  (list 'not (apply list '= kids))
       "("           :useless
       ")"           :useless
@@ -45,10 +44,6 @@
       "metric_f"    'metric_f
       "time"        'time
       (when n (read-string n)))))
-
-(defn approx [value pattern]
-  "Approximately matches value with pattern."
-  (re-find (re-pattern (.replaceAll pattern "%" ".*")) value))
 
 (defn ast [string]
   "The expression AST for a given string"
