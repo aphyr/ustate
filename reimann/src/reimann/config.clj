@@ -1,8 +1,9 @@
 (ns reimann.config
   (:require [reimann.core])
   (:require [reimann.server])
-  (:use [reimann.client])
-  (:use [reimann.streams])
+  (:use reimann.client)
+  (:use reimann.streams)
+  (:use reimann.email)
   (:gen-class))
 
 ; A stateful DSL for expressing reimann configuration.

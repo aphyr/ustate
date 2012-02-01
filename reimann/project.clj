@@ -9,6 +9,8 @@
     [protobuf "0.6.0-beta4"]
     [org.antlr/antlr "3.2"]
     [com.boundary/high-scale-lib "1.0.3"]
+    [clj-time "0.3.4"]
+    [com.draines/postal "1.7-SNAPSHOT"]
   ]
   :dev-dependencies [
     [protobuf "0.6.0-beta4"]

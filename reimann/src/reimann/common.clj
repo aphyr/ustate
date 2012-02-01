@@ -20,6 +20,10 @@
 (defn unix-time []
   (/ (System/currentTimeMillis) 1000))
 
+(defn time-at [unix-time]
+  "Returns the Date of a unix epoch time."
+  (java.util.Date. (long unix-time)))
+
 ; Create a new event
 (defn event [opts]
   (let [t (round (or (opts :time)
