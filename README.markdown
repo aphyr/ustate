@@ -29,15 +29,15 @@ Ready:
   - Split by field
   - Where filter
   - Combine streams (with let bindings; macro pending)
-  - Override fields
+  - Change values
   - Forward to another ustate/reimann
+- State index
+- Send emails
 - Query parser
+- Querying states
 
 TODO before release:
 
-- State index
-- Query states
-- Send emails
 - Forward to graphite
 - Docs, demo, slides for talk
 
