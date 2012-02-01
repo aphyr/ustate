@@ -1,10 +1,14 @@
 (defproject reimann "0.0.1-SNAPSHOT"
   :description "reimann: folds events into states"
+  :repositories {
+    "boundary-site" "http://maven.boundary.com/artifactory/repo"
+  }
   :dependencies [
     [clojure "1.2.0"]
     [aleph "0.2.0"]
     [protobuf "0.6.0-beta4"]
     [org.antlr/antlr "3.2"]
+    [com.boundary/high-scale-lib "1.0.3"]
   ]
   :dev-dependencies [
     [protobuf "0.6.0-beta4"]
