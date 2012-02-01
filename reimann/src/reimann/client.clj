@@ -34,15 +34,22 @@
   (locking client
     (let [raw (protobuf-dump message)]
        (try 
-         (send-message-raw client raw)
+         (decode (send-message-raw client raw))
          (catch Exception e
            (log :warn "first send failed, retrying" e)
            (try 
              (open-tcp-conn client)
-             (send-message-raw client raw)
+             (decode (send-message-raw client raw))
              (catch Exception e
                (log :warn "second send failed" e)
                false)))))))
+
+(defn query [client string]
+  "Query the server for states in the index. Returns a list of states."
+  (let [resp (send-message client
+               (protobuf Msg :query
+                 (protobuf Query :string string)))]
+    (:states resp)))
 
 ; Send an event Protobuf
 (defn send-event-protobuf [client event]

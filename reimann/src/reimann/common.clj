@@ -1,9 +1,16 @@
 (ns reimann.common
   (:use [protobuf.core])
   (:import [java.util Date])
+  (:use gloss.core)
+  (:require gloss.io)
   (:use [clojure.contrib.math]))
 
+; Don't mangle underscores into dashes. <sigh>
+(. protobuf.core.PersistentProtocolBufferMap setUseUnderscores true)
+
+; Protobufs
 (def Msg (protodef reimann.Proto$Msg))
+(def Query (protodef reimann.Proto$Query))
 (def State (protodef reimann.Proto$State))
 (def Event (protodef reimann.Proto$Event))
 
@@ -23,6 +30,13 @@
 (defn time-at [unix-time]
   "Returns the Date of a unix epoch time."
   (java.util.Date. (long unix-time)))
+
+(defn decode [s]
+  "Decode a gloss buffer to a Msg"
+  (let [buffer (gloss.io/contiguous s)]
+    (let [bytes (byte-array (.remaining buffer))]
+      (.get buffer bytes 0 (alength bytes))
+      (protobuf-load Msg bytes))))
 
 ; Create a new event
 (defn event [opts]

@@ -4,6 +4,7 @@
   (:use [reimann.client])
   (:use [reimann.common])
   (:use [reimann.core])
+  (:use reimann.index)
   (:use [clojure.contrib.generic.functor :only (fmap)])
   (:use [clojure.test]))
 
@@ -13,6 +14,33 @@
   `(let [start# (. System (nanoTime))
          ret# ~expr]
      (/ (- (. System (nanoTime)) start#) 1000000000.0)))
+
+(deftest query-test
+         (let [core (core)
+               index (index)
+               server (reimann.server/tcp-server core)
+               stream (reimann.streams/update index)
+               client (reimann.client/tcp-client)]
+
+           (try
+             (dosync
+               (alter (core :servers) conj server)
+               (alter (core :streams) conj stream)
+               (ref-set (core :index) index))
+
+             ; Send events
+             (send-event client {:metric_f 1 :time 1})
+             (send-event client {:metric_f 2 :time 2})
+             (send-event client {:service "miao" :host "cat" :time 3})
+
+             (is (= (set (query client "host = nil or service = \"miao\""))
+                    #{(state {:metric_f 2.0 :time 2}) 
+                      (state {:service "miao" :host "cat" :time 3})}))
+
+             (finally
+               (close-client client)
+               (stop core)))))
+
 
 (deftest sum
          (let [core (core)

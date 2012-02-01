@@ -6,7 +6,8 @@
 ; Create a new core
 (defn core []
   {:servers (ref [])
-   :streams (ref [])})
+   :streams (ref [])
+   :index   (ref nil)})
 
 (defn start [core])
 

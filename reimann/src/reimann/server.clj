@@ -1,6 +1,8 @@
 (ns reimann.server
   (:use [reimann.core])
   (:use [reimann.common])
+  (:require [reimann.query :as query])
+  (:require [reimann.index :as index])
   (:use clojure.contrib.logging)
   (:use lamina.core)
   (:use aleph.tcp)
@@ -8,15 +10,27 @@
   (:use [protobuf.core])
   (:require gloss.io))
 
-(defn decode [s]
-  (let [buffer (gloss.io/contiguous s)]
-    (let [bytes (byte-array (.remaining buffer))]
-      (.get buffer bytes 0 (alength bytes))
-      (protobuf-load Msg bytes))))
-
 ; maybe later
 ;(defn udp-server []
 ;  (let [channel (wait-for-result (udp-socket {:port 5555}))]   
+
+; Handles a buffer with the given core.
+(defn handle [core buffer]
+  (let [msg (decode buffer)]
+    ; Send each event/state to each stream
+    (doseq [event (concat (:events msg) (:states msg))
+            stream (deref (:streams core))]
+      (stream event))
+   
+    (if (:query msg)
+      ; Handle query
+      (let [ast (query/ast (:string (:query msg)))]
+        (if-let [i (deref (:index core))]
+          (protobuf Msg :ok true :states (index/search i ast))
+          (protobuf Msg :ok false :error "no index")))
+
+      ; Generic acknowledge 
+      (protobuf Msg :ok true))))
 
 ; Returns a handler that applies messages to the given streams (by reference)
 (defn handler [core]
@@ -25,15 +39,7 @@
       (when buffer
         ; channel isn't closed; this is our message
         (try
-          (let [msg (decode buffer)]
-            ; Send each event to each stream
-            (doseq [event (msg :events)
-                    stream (deref (:streams core))]
-              (stream event))
-
-            ; And acknowledge
-            (enqueue channel (protobuf-dump
-              (protobuf Msg :ok true))))
+          (enqueue channel (protobuf-dump (handle core buffer)))
           (catch java.nio.channels.ClosedChannelException e
             (log :warn (str "channel closed")))
           (catch com.google.protobuf.InvalidProtocolBufferException e
