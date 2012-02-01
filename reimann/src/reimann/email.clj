@@ -44,4 +44,4 @@
         (let [opts (if (empty? recipients) 
                      opts
                      (merge opts {:to recipients}))]
-          (prn (email-event opts event)))))))
+          (email-event opts event))))))
