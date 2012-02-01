@@ -1,6 +1,7 @@
 (ns reimann.streams
   (:use reimann.common)
   (:use reimann.folds)
+  (:require [reimann.index :as index])
   (:require [reimann.client])
   (:use [clojure.contrib.math])
   (:use [clojure.contrib.logging]))
@@ -314,3 +315,13 @@
     `(fn [event#]
        (when (let [~'event event#] ~p)
          (call-rescue event# [~@children])))))
+
+(defn update [index]
+  "Updates the given index with all states received."
+  (fn [state]
+    (index/update index state)))
+
+(defn delete-from [index]
+  "Deletes any events that pass through from the index"
+  (fn [state]
+    (index/delete index state)))

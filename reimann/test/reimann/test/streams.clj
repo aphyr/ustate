@@ -1,6 +1,7 @@
 (ns reimann.test.streams
   (:use [reimann.streams])
   (:use [reimann.common])
+  (:require [reimann.index :as index])
   (:use [clojure.test]))
 
 (deftest match-test
@@ -223,3 +224,26 @@
            
            (doseq [m metrics] (r {:metric_f m}))
            (is (= expect (vec (map (fn [s] (:metric_f s)) (deref output)))))))
+
+(deftest uupdate-test
+         (let [i (index/index)
+               s (update i)
+               states [{:host 1 :state "ok"} 
+                       {:host 2 :state "ok"} 
+                       {:host 1 :state "bad"}]]
+           (doseq [state states] (s state))
+           (is (= (set (.values i))
+                  #{{:host 1 :state "bad"}
+                    {:host 2 :state "ok"}}))))
+
+(deftest delete-from-test
+         (let [i (index/index)
+               s (update i)
+               states [{:host 1 :state "ok"} 
+                       {:host 2 :state "ok"} 
+                       {:host 1 :state "bad"}]]
+           (doseq [state states] (s state))
+           (is (= (set (.values i))
+                  #{{:host 1 :state "bad"}
+                    {:host 2 :state "ok"}}))))
+
