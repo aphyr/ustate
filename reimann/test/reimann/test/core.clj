@@ -69,7 +69,10 @@
            (is (= [2] (map (fn [e] (:service e)) (.values index))))
 
            ; Check that expired-stream received them.
-           (is (= 1 (:service (deref res))))))
+           (is (= (select-keys @res [:service :host :state])
+                  {:service 1
+                   :host nil
+                   :state "expired"}))))
 
 (deftest sum
          (let [core (core)

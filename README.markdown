@@ -35,6 +35,7 @@ Ready:
 - Send emails
 - Query parser
 - Querying states
+- Basic expiry
 
 TODO before release:
 

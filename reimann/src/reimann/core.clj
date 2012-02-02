@@ -1,5 +1,6 @@
 (ns reimann.core
-  (:require [reimann.streams])
+  (:use reimann.common)
+  (:require reimann.streams)
   (:require [reimann.index :as index]))
 
 ; This will probably come into play more when I work on hot reloading.
@@ -13,7 +14,8 @@
 
 (defn periodically-expire [core interval]
   "Every interval (default 10) seconds, expire states from this core's index
-  and stream them to streams, with state \"expired\"."
+  and stream them to streams. The streamed states have only the host and service
+  copied, current time, and state expired."
   (let [interval (* 1000 (or interval 10))]
     (future (loop []
               (Thread/sleep interval)
@@ -22,7 +24,10 @@
                 (when i
                   (doseq [state (index/expire i)
                          stream streams]
-                    (stream (assoc state :state "expired")))))
+                    (stream {:host (:host state)
+                             :service (:service state)
+                             :state "expired"
+                             :time (unix-time)}))))
               (recur)))))
 
 (defn start [core]
