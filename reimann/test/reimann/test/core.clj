@@ -41,6 +41,35 @@
                (close-client client)
                (stop core)))))
 
+(deftest expires
+         (let [core (core)
+               index (index)
+               res (ref nil)
+               expired-stream (reimann.streams/expired? 
+                                (fn [e] (dosync (ref-set res e))))
+               stream (reimann.streams/update index)
+               reaper (periodically-expire core 0.001)]
+
+               (dosync
+                 (ref-set (:index core) index)
+                 (alter (:streams core) conj stream)
+                 (alter (:streams core) conj expired-stream))
+
+           ; Insert events
+           (stream {:service 1 :ttl 0.00 :time (unix-time)})
+           (stream {:service 2 :ttl 1 :time (unix-time)})
+
+           ; Wait for reaper to eat them
+           (Thread/sleep 5)
+
+           ; Kill reaper
+           (future-cancel reaper)
+           
+           ; Check that index does not contain these states
+           (is (= [2] (map (fn [e] (:service e)) (.values index))))
+
+           ; Check that expired-stream received them.
+           (is (= 1 (:service (deref res))))))
 
 (deftest sum
          (let [core (core)

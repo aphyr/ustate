@@ -187,6 +187,10 @@
 (defn state? [value & children] (apply match :state value children))
 (defn time? [value & children] (apply match :time value children))
 
+(defn expired? [& children]
+  "Passes on events with state expired"
+  (apply match :state "expired" children))
+
 ; Transforms an event by associng a set of new k:v pairs
 (defmulti with (fn [& args] (map? (first args))))
 (defmethod with true [m & children]
