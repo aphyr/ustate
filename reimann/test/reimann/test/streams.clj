@@ -257,9 +257,14 @@
              (stream state))
 
            (let [dt (- (unix-time) t1)
-                 slices (inc (quot dt quantum))
-                 maxcount (* slices 5)]
-             (is (approx-equal maxcount (count (deref out)))))))
+                 slices (quot dt quantum)
+                 maxcount (* slices 5)
+                 count (count (deref out))]
+
+             ; Depending on whether we fell exactly on the interval boundary...
+             ; ugh I hate testing this shit
+             (is (approx-equal count maxcount 0.1))
+             (is (zero? (mod count 5))))))
 
 (deftest rollup-test
          (let [out (ref [])
