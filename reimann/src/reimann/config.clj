@@ -4,6 +4,7 @@
   (:use reimann.client)
   (:use reimann.streams)
   (:use reimann.email)
+  (:use reimann.graphite)
   (:gen-class))
 
 ; A stateful DSL for expressing reimann configuration.

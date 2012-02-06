@@ -15,6 +15,9 @@
   :dev-dependencies [
     [protobuf "0.6.0-beta4"]
   ]
+  :test-selectors {:default (complement :integration)
+                   :integration :integration
+                   :all (fn [_] true)}
   :java-source-path "src/reimann/"
   :aot [reimann.bin]
   :main reimann.bin
