@@ -247,3 +247,16 @@
                   #{{:host 1 :state "bad"}
                     {:host 2 :state "ok"}}))))
 
+(deftest throttle-test
+         (let [out (ref [])
+               quantum 0.1
+               stream (throttle 5 quantum (append out))
+               t1 (unix-time)]
+           
+           (doseq [state (take 100000 (repeat {:state "foo"}))]
+             (stream state))
+
+           (let [dt (- (unix-time) t1)
+                 slices (inc (quot dt quantum))
+                 maxcount (* slices 5)]
+             (is (approx-equal maxcount (count (deref out)))))))

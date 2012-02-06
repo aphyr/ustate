@@ -148,6 +148,24 @@
             event (assoc event :metric_f m)]
         (call-rescue event children)))))
 
+; Passes on n events every m seconds. Drops events when necessary.
+(defn throttle [n m & children]
+  (let [x (unix-time)
+        start (ref (- x (mod x m)))
+        sent (ref 0)]
+    (fn [event]
+      (let [now (unix-time)
+            nowstart (- now (mod now m))
+            _ (when (< (deref start) nowstart)
+                (dosync
+                   ; New timeslice
+                   (ref-set start nowstart)
+                   (ref-set sent 0)))
+            ok (dosync
+                 (>= n (alter sent + 1)))]
+        (when ok
+          (call-rescue event children))))))
+
 ; Conj events onto the given reference
 (defn append [reference]
   (fn [event]
