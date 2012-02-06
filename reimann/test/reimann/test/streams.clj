@@ -260,3 +260,29 @@
                  slices (inc (quot dt quantum))
                  maxcount (* slices 5)]
              (is (approx-equal maxcount (count (deref out)))))))
+
+(deftest rollup-test
+         (let [out (ref [])
+               quantum 0.1
+               stream (rollup 2 quantum (append out))
+               t1 (unix-time)]
+          
+           (stream 1)
+           (is (= (deref out) [[1]]))
+           (stream 2)
+           (is (= (deref out) [[1] [2]]))
+           (stream 3)
+           (is (= (deref out) [[1] [2]]))
+
+           (Thread/sleep 110)
+           (is (= (deref out) [[1] [2] [3]]))
+
+           (stream 4)
+           (is (= (deref out) [[1] [2] [3] [4]]))
+           (stream 5)
+           (stream 6)
+           (stream 7)
+           (is (= (deref out) [[1] [2] [3] [4]]))
+
+           (Thread/sleep 110)
+           (is (= (deref out) [[1] [2] [3] [4] [5 6 7]]))))

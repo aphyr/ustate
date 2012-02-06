@@ -148,23 +148,68 @@
             event (assoc event :metric_f m)]
         (call-rescue event children)))))
 
-; Passes on n events every m seconds. Drops events when necessary.
 (defn throttle [n m & children]
+  "Passes on n events every m seconds. Drops events when necessary."
   (let [x (unix-time)
         start (ref (- x (mod x m)))
         sent (ref 0)]
     (fn [event]
       (let [now (unix-time)
-            nowstart (- now (mod now m))
-            _ (when (< (deref start) nowstart)
+            current-start (- now (mod now m))
+            _ (when (< (deref start) current-start)
                 (dosync
                    ; New timeslice
-                   (ref-set start nowstart)
+                   (ref-set start current-start)
                    (ref-set sent 0)))
             ok (dosync
                  (>= n (alter sent + 1)))]
         (when ok
           (call-rescue event children))))))
+
+(defn rollup [n m & children]
+  "Invokes children with events at most n times per m second interval. Passes 
+  *vectors* of events to children, not a single event at a time. For instance, 
+  (rollup 3 1 f) receives five events and forwards three times per second:
+
+  1 -> (f [1])
+  2 -> (f [2])
+  3 -> (f [3])
+  4 ->
+  5 -> 
+
+  ... and events 4 and 5 are rolled over into the next period:
+
+    -> (f [4 5])"
+
+  (let [carry (ref [])]
+    ; This implementation relies on stable, one-after-the-other creation of
+    ; buckets from part-time. This is NOT always the case, so consider
+    ; carefully which part-time implementation is used.
+    (part-time-fast m
+      (fn [] (dosync
+               (if (empty? (deref carry))
+                           ; We haven't send any events yet.
+                           (ref 0)
+                           ; We already sent (or will shortly send) 1 event 
+                           ; for the carry.
+                           (ref 1))))
+
+      (fn [sent event]
+        (if (dosync (< n (alter sent inc)))
+          ; Overtime!
+          (dosync (alter carry conj event))
+          ; Send right away
+          (call-rescue [event] children)))
+
+      (fn [sent start end]
+        ; Dispatch carried events if present.
+        (let [events (dosync
+                       (let [x (deref carry)]
+                         (ref-set carry [])
+                         x))]
+          (when-not (empty? events)
+            (call-rescue events children)))))))
+
 
 ; Conj events onto the given reference
 (defn append [reference]
