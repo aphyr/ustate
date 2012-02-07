@@ -118,6 +118,12 @@
           (call-rescue event children)))))
 
 (defn percentiles [interval points & children]
+  "Over each period of interval seconds, aggregates events and selects one
+  event from that period for each point. If point is 0, takes the lowest metric
+  event.  If point is 1, takes the highest metric event. 0.5 is the median
+  event, and so forth. Forwards each of these events to children. The service
+  name has the point appended to it; e.g. 'response time' becomes 'response
+  time .95'."
   (part-time-fast interval
                 (fn [] (ref []))
                 (fn [r event] (dosync (alter r conj event)))
