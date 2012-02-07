@@ -1,6 +1,7 @@
 (ns reimann.config
   (:require [reimann.core])
   (:require [reimann.server])
+  (:require reimann.index)
   (:use reimann.client)
   (:use reimann.streams)
   (:use reimann.email)
@@ -20,6 +21,11 @@
 (defn streams [& things]
   (dosync
     (alter (core :streams) concat things)))
+
+; Create an index
+(defn index [& opts]
+  (dosync
+    (ref-set (core :index) (apply reimann.index/index opts))))
 
 ; Start the core
 (defn start []
