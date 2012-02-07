@@ -156,21 +156,12 @@
 
 (defn throttle [n m & children]
   "Passes on n events every m seconds. Drops events when necessary."
-  (let [x (unix-time)
-        start (ref (- x (mod x m)))
-        sent (ref 0)]
-    (fn [event]
-      (let [now (unix-time)
-            current-start (- now (mod now m))
-            _ (when (< (deref start) current-start)
-                (dosync
-                   ; New timeslice
-                   (ref-set start current-start)
-                   (ref-set sent 0)))
-            ok (dosync
-                 (>= n (alter sent + 1)))]
-        (when ok
-          (call-rescue event children))))))
+  (part-time-fast m
+    (fn [] (ref 0))
+    (fn [sent event]
+      (when-not (dosync (< n (alter sent inc)))
+        (call-rescue event children)))
+    (fn [sent start end])))
 
 (defn rollup [n m & children]
   "Invokes children with events at most n times per m second interval. Passes 
