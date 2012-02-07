@@ -36,7 +36,8 @@ primary	: 	(
 		);
 
 fragment
-simple	:	(approximately
+simple	:	( t | f | nil
+		| approximately
 		| lesser
 		| lesser_equal
 		| greater

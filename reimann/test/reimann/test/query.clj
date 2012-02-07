@@ -13,10 +13,10 @@
               "time = true"         '(= time true)
 
               ; Literals
-              "state = true"  '(= state true)
-              "state = false" '(= state false)
-              "state = nil"   '(= state nil)
-              "state = null"  '(= state nil)
+              "true"  true
+              "false" false
+              "nil"   nil
+              "null"  nil
 
               ; Integers
               "state = 0"  '(= state 0)
@@ -80,6 +80,19 @@
       (is (fun state)))
     (doseq [state evil]
       (is (not (fun state))))))
+
+(deftest truthy
+         (f "true"
+            [{:state "foo"} {}]
+            [])
+         
+         (f "false"
+            []
+            [{:state "foo"} {}])
+
+         (f "null"
+            []
+            [{:state "foo"} {}]))
 
 (deftest equal
          (f "state = \"foo\"" 
