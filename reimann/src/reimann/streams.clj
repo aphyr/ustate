@@ -385,9 +385,10 @@
   ; Match a state where the host begins with web
   (where (host #\"^web\") ...)"
   (let [p (where-rewrite expr)]
-    `(fn [event#]
+    `(let [kids# [~@children]]
+      (fn [event#]
        (when (let [~'event event#] ~p)
-         (call-rescue event# [~@children])))))
+         (call-rescue event# kids#))))))
 
 (defn update [index]
   "Updates the given index with all states received."
