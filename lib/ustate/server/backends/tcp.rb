@@ -7,7 +7,7 @@ class UState::Server
     attr_accessor :host, :port
 
     HOST = '127.0.0.1'
-    PORT = 55956
+    PORT = 5555
 
     def initialize(opts = {})
       @host = opts[:host] || HOST

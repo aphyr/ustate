@@ -8,7 +8,7 @@ class UState::Client
   require 'time'
 
   HOST = '127.0.0.1'
-  PORT = 55956
+  PORT = 5555
 
   TYPE_STATE = 1
 
