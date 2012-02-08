@@ -6,7 +6,7 @@ require 'trollop'
 
 o = Trollop.options do
   opt :host, 'Address to listen on', :default => '127.0.0.1'
-  opt :port, 'Port to listen on', :default => 55956
+  opt :port, 'Port to listen on', :default => 5555
   opt :"config-file", "Configuration file (ruby code, instance-evaled in server)", :default => 'config.rb'
 end
 

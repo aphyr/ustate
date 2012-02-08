@@ -153,7 +153,7 @@ end
   
 UState::Health.new(Trollop.options do
   opt :host, "Host", :default => '127.0.0.1'
-  opt :port, "Port", :default => 55956
+  opt :port, "Port", :default => 5555
   opt :interval, "Seconds between updates", :default => 5
   opt :cpu_warning, "CPU warning threshold (fraction of total jiffies)", :default => 0.9
   opt :cpu_critical, "CPU critical threshold (fraction of total jiffies)", :default => 0.95

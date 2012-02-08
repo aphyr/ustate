@@ -49,7 +49,7 @@ end
   
 UState::Pipe.new(Trollop.options do
   opt :host, "Host", :default => '127.0.0.1'
-  opt :port, "Port", :default => 55956
+  opt :port, "Port", :default => 5555
   opt :interval, "Run command periodically", :default => 5
   opt :command, "Run the given command and use its output as the metric.", type: :string
   opt :"state-service", "Service", type: :string
