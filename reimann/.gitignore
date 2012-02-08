@@ -2,6 +2,7 @@
 pom.xml
 *.jar
 *.war
+*.deb
 lib
 classes
 build

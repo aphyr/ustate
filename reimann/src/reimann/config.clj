@@ -33,5 +33,6 @@
 
 ; Eval the config file in this context
 (defn include [file]
-  (binding [*ns* (find-ns 'reimann.config)]
-    (load-string (slurp (or file "reimann.config")))))
+  (let [file (or file (first *command-line-args*) "reimann.config")]
+    (binding [*ns* (find-ns 'reimann.config)]
+      (load-string (slurp file)))))
