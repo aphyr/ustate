@@ -14,7 +14,7 @@ class UState::TestEvent
     @hosts = ['test']
     @services = %w(per)
     @states = {}
-    @client = UState::Client.new(port: 55955)
+    @client = UState::Client.new
   end
 
   def evolve(state)
