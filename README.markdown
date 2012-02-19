@@ -1,56 +1,18 @@
-Update
-======
+End-of-life
+===========
 
-For performance reasons, and for fun, I've started work on a drop-in
-replacement for ustate: reimann.
+UState has been superceded by Reimann.
 
-Reimann uses the same wire protocol and queries, so you can forward from ustate
-to reimann and vice-versa. The ruby ustate client in master already supports
-reimann. Simple benchmarks suggest 3,000 synchronous events/sec on a single
-thread; most of the time spent in network code. There is low-hanging
-optimization fruit here--I'm just trying to get it feature-complete so I can
-test on real datasets. Underlying stream primitives like rates already handle
-hundreds of thousands of events/sec on a Macbook Pro.
+https://github.com/aphyr/reimann
 
-Reimann provides a more expressive language for filtering, changing, splitting,
-and combining events across time and state space. Instead of *states*, you
-submit *events* which flow through various pipes. You no longer have to
-aggregate states over time on the client; it's possible to submit *every* event
-directly to reimann and it will compute rates, percentiles, etc.
+Reimann is mostly wire-compatible with ustate. Ustate clients can send states
+to Reimann--they will be interpreted as events. The query syntax is expanded
+but backwards-compatible. Reimann-client can query both uState and Reimann
+transparently. The utilities, client library, and dashboard have been split
+up into separate projects.
 
-Ready:
-
-- TCP server
-- TCP forwarding
-- Configuration file
-- Stream primitives
-  - Rates
-  - Percentiles
-  - Split by field
-  - Where filter
-  - Combine streams (with let bindings; macro pending)
-  - Change values
-  - Forward to another ustate/reimann
-- State index
-- Send emails
-- Query parser
-- Querying states
-- Basic expiry
-
-TODO before release:
-
-- Forward to graphite
-- Docs, demo, slides for talk
-
-After that:
-- HSQL index
-- UDP server
-- UDP client
-- Ruby UDP client
-- Drop aleph, replace with raw netty?
-- Subscribe to streams?
-
-The Sinatra dashboard will still be maintained, as will the ruby clients.
+Reimann is much more powerful, significantly faster, and should be a relatively
+painless migration. If you have any problems, please email me: aphyr@aphyr.com.
 
 Overview
 ======
