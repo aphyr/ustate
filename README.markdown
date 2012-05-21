@@ -1,17 +1,17 @@
 End-of-life
 ===========
 
-UState has been superceded by Reimann.
+UState has been superceded by Riemann.
 
-https://github.com/aphyr/reimann
+https://github.com/aphyr/riemann
 
-Reimann is mostly wire-compatible with ustate. Ustate clients can send states
-to Reimann--they will be interpreted as events. The query syntax is expanded
-but backwards-compatible. Reimann-client can query both uState and Reimann
+Riemann is mostly wire-compatible with ustate. Ustate clients can send states
+to Riemann--they will be interpreted as events. The query syntax is expanded
+but backwards-compatible. Riemann-client can query both uState and Riemann
 transparently. The utilities, client library, and dashboard have been split
 up into separate projects.
 
-Reimann is much more powerful, significantly faster, and should be a relatively
+Riemann is much more powerful, significantly faster, and should be a relatively
 painless migration. If you have any problems, please email me: aphyr@aphyr.com.
 
 Overview
